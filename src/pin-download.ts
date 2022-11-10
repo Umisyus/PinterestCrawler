@@ -2,9 +2,10 @@ import { launch_login } from "./crawler.js";
 import * as Playwright from "playwright";
 import fs from "fs";
 import path from "path";
-import { Board, Pin } from "./types.js";
+import { Board, Pin, Section } from "./types.js";
 import { randomUUID } from 'crypto';
 import JSZip from 'jszip';
+import { downloadVideo } from "./dl-video.js";
 
 /*
 #TODO: Add a way to find pins already downloaded
@@ -36,12 +37,23 @@ let __dirname = path.dirname(process.argv[1]);
         }
 
         // Doesn't work
-        let valid_pins = pin_data.filter(b => b.boardPins.filter(p => p.is_video == false))
+        // Overwrites the properties of all boards
+        let valid_pins = pin_data.map(b => ({ ...b, boardPins: b.boardPins.filter(p => p.is_video == false), sections: b.sections.map(s => s.sectionPins.filter(p => p.is_video == false)) }));
+
+        // Filter out video pins in boardPins and sectionPins
+        let invalid_pins = pin_data.map(
+            b => ({
+                ...b, boardPins: b.boardPins.filter(p => p.is_video == true),
+                sections: [b.sections.map(s => ({ ...s, sectionPins: s.sectionPins.filter(p => p.is_video == true) }) as Section)].flat()
+                // .filter(s => s.sectionPins
+                //     .filter(p => p.is_video == true))
+            }));
+
         // Get username from board link
         let bl = valid_pins[0].boardLink
 
-        for (let index = 0; index < valid_pins.length; index++) {
-            const data = pin_data[index];
+        for (let index = 0; index < invalid_pins.length; index++) {
+            const data = invalid_pins[index];
 
             await dlPinBoard(data, page)
 
@@ -111,7 +123,9 @@ async function dlPin(pin: Pin, page: Playwright.Page, boardName: string, section
 
     if (pin.image_link == "" || pin.is_video == true) {
         console.warn(`No Link for ${pin.title}`);
-        return { fileName: "", data: "", stream: "" };
+        let { data, stream, video_path } = await downloadVideo(pin.title, pin.pin_link)
+
+        return { fileName: video_path, data: data, stream: stream };
     }
     console.log(pin.image_link);
 
