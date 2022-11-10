@@ -109,10 +109,13 @@ async function dlPinBoard(board: Board, page: Playwright.Page) {
             // Add image to folder, board folder is the root folder
             let zipped_image_path = `${board.boardName}/${section.sectionName}/${fileName}`
 
-            if (data !== "" || stream !== "") {
+            if (data !== null || stream !== null) {
                 zip.file((zipped_image_path), (stream ?? data ?? ""));
                 console.log("Added file to zip");
+            } else {
+                console.log("Downloaded file is empty");
             }
+
         }
     }
     console.log("Done downloading entire board");
@@ -122,8 +125,10 @@ async function dlPinBoard(board: Board, page: Playwright.Page) {
 async function dlPin(pin: Pin, page: Playwright.Page, boardName: string, sectionName: string) {
 
     if (pin.image_link == "" || pin.is_video == true) {
-        console.warn(`No Link for ${pin.title}`);
-        let { data, stream, video_path } = await downloadVideo(pin.title, pin.pin_link)
+        console.warn(`No image for ${pin.title}`);
+        console.log("Downloading video");
+
+        let { data, stream, video_path } = await downloadVideo(pin.pin_link, pin.title)
 
         return { fileName: video_path, data: data, stream: stream };
     }

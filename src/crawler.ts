@@ -1,5 +1,5 @@
 import * as playwright from 'playwright';
-import { Browser, Locator } from 'playwright';
+import { Browser, BrowserContext, Locator } from 'playwright';
 import { randomUUID } from 'crypto';
 import type { Section, Board, Pin } from './types';
 import * as fs from 'fs/promises'
@@ -25,21 +25,25 @@ const exclusion_file = await fs.readFile(__dirname + '/../src/' + 'exclusions.js
 
 let exclusions = JSON.parse(exclusion_file ?? '[]') as string[]
 
-const browser = await playwright.chromium
-    .launchPersistentContext('./pinterest-download-data', {
-        // headless: true, devtools: true,
-        headless: false, devtools: false,
-        // executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    })
+let g_browser: BrowserContext;
+
 
 const STORAGE_STATE_PATH = './storage/storageState.json';
-export async function launch_login() {
+export async function launch_login(browserType?: 'chromium' | 'firefox' | 'webkit') {
     let obj = (await fs.readFile(__dirname + '/../storage/login.json')).toString('utf8').trim()
 
     let user = JSON.parse(obj).user
     let pass = JSON.parse(obj).pass
 
+    const browser = await playwright[browserType ?? 'chromium']
+        .launchPersistentContext('./pinterest-download-data', {
+            // headless: true, devtools: true,
+            headless: false, devtools: false,
+            // executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        })
 
+    // Horrible hack to get around the fact that the browser is not defined
+    g_browser = browser
     const page = await browser!.newPage();
     await page.goto('https://pinterest.ca/login');
 
@@ -267,7 +271,7 @@ export async function crawl_start(page: playwright.Page) {
     console.log("Closing browser");
 
     await page.close();
-    await browser.close();
+    await g_browser?.close();
 
     console.log("Closed.");
 
