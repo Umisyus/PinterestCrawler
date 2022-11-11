@@ -41,19 +41,17 @@ let __dirname = path.dirname(process.argv[1]);
         let valid_pins = pin_data.map(b => ({ ...b, boardPins: b.boardPins.filter(p => p.is_video == false), sections: b.sections.map(s => s.sectionPins.filter(p => p.is_video == false)) }));
 
         // Filter out video pins in boardPins and sectionPins
-        let invalid_pins = pin_data.map(
+        let video_only_pins = pin_data.map(
             b => ({
                 ...b, boardPins: b.boardPins.filter(p => p.is_video == true),
                 sections: [b.sections.map(s => ({ ...s, sectionPins: s.sectionPins.filter(p => p.is_video == true) }) as Section)].flat()
-                // .filter(s => s.sectionPins
-                //     .filter(p => p.is_video == true))
             }));
 
         // Get username from board link
         let bl = valid_pins[0].boardLink
 
-        for (let index = 0; index < invalid_pins.length; index++) {
-            const data = invalid_pins[index];
+        for (let index = 0; index < video_only_pins.length; index++) {
+            const data = video_only_pins[index];
 
             await dlPinBoard(data, page)
 
@@ -128,9 +126,9 @@ async function dlPin(pin: Pin, page: Playwright.Page, boardName: string, section
         console.warn(`No image for ${pin.title}`);
         console.log("Downloading video");
 
-        let { data, stream, video_path } = await downloadVideo(pin.pin_link, pin.title)
+        await downloadVideo(pin.pin_link, pin.title, page)
 
-        return { fileName: video_path, data: data, stream: stream };
+        return { fileName: "", data: "", stream: "" };
     }
     console.log(pin.image_link);
 
