@@ -167,7 +167,7 @@ async function directDownload(link: string, page: Playwright.Page, dl_path: stri
 }
 
 
-function mergeVideoFiles(video_data: string[], dir: string, fileName: string = 'merged_video.mp4') {
+async function mergeVideoFiles(video_data: string[], dir: string, fileName: string = 'merged_video.mp4') {
 
 
     //an array of video path to concatenate
@@ -182,8 +182,9 @@ function mergeVideoFiles(video_data: string[], dir: string, fileName: string = '
         await concat({
             output,
             videos,
-            audio: "/home/username/Downloads/music/music.m4a",
+            // audio: "/home/username/Downloads/music/music.m4a",
         })
     }
+    return await oneTransitionMergeVideos()
 }
 
