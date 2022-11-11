@@ -13,6 +13,8 @@
     },
     "devDependencies": {
         "@apify/tsconfig": "^0.1.0",
+        "@types/ffmpeg-concat": "^1.1.2",
+        "@types/glob": "^8.0.0",
         "ts-node": "^10.8.0",
         "typescript": "^4.7.4"
     },

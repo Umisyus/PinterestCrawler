@@ -3,7 +3,8 @@ import fs from "fs/promises";
 import { createReadStream } from 'fs';
 import { Page } from "playwright";
 import Playwright from "playwright";
-
+import concat from 'ffmpeg-concat';
+import glob from 'glob';
 // const watch_text_selector = '//*[@id="__PWS_ROOT__"]/div[1]/div[2]/div/div/div/div/div[2]/div/div/div/div/div[2]/div/div/div/div/div/div/div/div/div[1]/div/div/div/div/div/div[1]/div/div/div[2]/div/div[2]/div/div/h3'
 const watch_text_selector = 'h3'
 let dir = ''
@@ -167,8 +168,7 @@ async function directDownload(link: string, page: Playwright.Page, dl_path: stri
 
 
 function mergeVideoFiles(video_data: string[], dir: string, fileName: string = 'merged_video.mp4') {
-    const concat = require('ffmpeg-concat')
-    const glob = require('glob')
+
 
     //an array of video path to concatenate
     // read all files
