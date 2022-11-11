@@ -126,9 +126,12 @@ async function dlPin(pin: Pin, page: Playwright.Page, boardName: string, section
         console.warn(`No image for ${pin.title}`);
         console.log("Downloading video");
 
-        await downloadVideo(pin.pin_link, pin.title, page)
+        let a = await downloadVideo(pin.pin_link, pin.title, page)
+        // let data = a?.data ?? "";
+        // let download_path = a?.download_path ?? "";
+        // let stream: fs.ReadStream | undefined = a?.stream
 
-        return { fileName: "", data: "", stream: "" };
+        // return { fileName: download_path, data, stream: stream ?? "" };
     }
     console.log(pin.image_link);
 

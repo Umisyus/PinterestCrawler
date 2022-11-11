@@ -86,11 +86,13 @@ export async function downloadVideo(pin_link: string, pin_title: string, page: P
     })
 
     await videoPage.goto(pin_link, { timeout: 0 });
-    await videoPage.waitForTimeout(100_000)
+    await videoPage.waitForTimeout(1_000)
     // button with text
     await page.locator('button', { hasText: "Watch again" }).isVisible() === true
 
     debugger
+console.log("Done");
+
 
     await videoPage.context().close();
     // return { video_path: dl_path, data, stream };
