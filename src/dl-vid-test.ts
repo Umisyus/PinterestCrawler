@@ -28,77 +28,78 @@ export async function downloadVideo(pin_link: string, pin_title: string, page: P
     await videoPage.route('**/*', async (route, req) => {
         let isFragmented = true
         let breakCounter = 0
-        do {
-            let requestUrl = route.request().url()
-            route.continue();
-            switch (!!requestUrl) {
-                case requestUrl.includes('.ts'):
+        // do {
+        let requestUrl = route.request().url()
+        route.continue();
+        switch (!!requestUrl) {
+            case requestUrl.includes('.ts'):
 
-                    console.log("Video data piece found");
+                console.log("Video data piece found");
 
-                    let resp = (await req.response().catch((err) => console.log(err)))
+                let resp = (await req.response().catch((err) => console.log(err)))
 
-                    // let text = await resp?.text()
-                    // // video_data.push(text)
-                    // console.log({ text });
+                // let text = await resp?.text()
+                // // video_data.push(text)
+                // console.log({ text });
 
-                    if (resp) {
-                        console.log("Response found");
+                if (resp) {
+                    console.log("Response found");
 
-                        let body = await resp.body()
-                            .catch((err) => console.log(err))
-                        let text = await resp.text()
-                            .catch((err) => console.log(err))
+                    let body = await resp.body()
+                        .catch((err) => console.log(err))
+                    let text = await resp.text()
+                        .catch((err) => console.log(err))
 
-                        if (body) {
-                            console.log({ body });
-                            video_data.push(body)
-                            isFragmented = true
+                    if (body) {
+                        console.log({ body });
+                        video_data.push(body)
+                        isFragmented = true
 
-                            if (video_data.filter((data, i, video_data) => video_data.indexOf(data) !== i)) {
-                                console.log("Video data pieces collected");
-                                isFragmented = false
-                                break
-                            }
+                        if (video_data.filter((data, i, video_data) => video_data.indexOf(data) !== i)) {
+                            console.log("Video data pieces collected");
+                            isFragmented = false
+                            break
                         }
-
                     }
 
-                    else {
-                        console.log("No response body found");
-                    }
-                    break;
-                case requestUrl.includes('.mp4'):
+                }
 
-                    console.log("Video Located!!!", await (await req.response())?.body());
-                    console.log(requestUrl);
+                else {
+                    console.log("No response body found");
+                }
+                break;
+            case requestUrl.includes('.mp4'):
 
-                    page.waitForResponse(requestUrl)
+                console.log("Video Located!!!", await (await req.response())?.body());
+                console.log(requestUrl);
 
-                    let response = (await route.request().response())
-                    let respTxt = response?.text
+                page.waitForResponse(requestUrl)
 
-                    console.log("Response text: ", respTxt);
-                    await page.goto(requestUrl)
+                let response = (await route.request().response())
+                let respTxt = response?.text
 
-                    let { download_path, data, stream } = await directDownload(requestUrl, dir, pin_title, page)
-                    console.log("Downloaded to: ", download_path);
-                    expected_video_data = { download_path, data, stream }
-                    isFragmented = false
-                    break
-                    // return { download_path, data, stream };
-                    break;
-                default:
-                    console.log("No video data found");
-                    breakCounter++
-                    break;
-            }
+                console.log("Response text: ", respTxt);
+                await page.goto(requestUrl)
+
+                let { download_path, data, stream } = await directDownload(requestUrl, dir, pin_title, page)
+                console.log("Downloaded to: ", download_path);
+                expected_video_data = { download_path, data, stream }
+                isFragmented = false
+                break
+                // return { download_path, data, stream };
+                break;
+            default:
+                console.log("No video data found");
+                breakCounter++
+                break;
         }
-        while (isFragmented == true && breakCounter < 20)
+        // }
+        // while (isFragmented == true && breakCounter < 20)
     })
 
     console.log("Goto pin link");
-    await videoPage.goto(pin_link, { timeout: 60_000 });
+    await videoPage.goto(pin_link, { timeout: 60_000 })
+        .catch((err) => console.log(`Could not go to pin link:`, `${err}`));
 
     await page.$eval('video', (el => el.play()))
         .catch((err) => console.log(`No video element found!`, `${err}`))
@@ -140,16 +141,18 @@ export async function downloadVideo(pin_link: string, pin_title: string, page: P
             console.log("No video data found");
         }
     }
-    console.log('Closing video page');
+    console.log("Done");
 
-    await videoPage.context().close();
+    // console.log('Closing video page');
+
+    // await videoPage.context().close();
 
     console.log("Video data: ", expected_video_data);
 
     return expected_video_data ?? {}
 }
 
-async function directDownload(link: string, fileName: string = 'pinterest-video.mp4', dl_path: string = dir, page: Playwright.Page,) {
+async function directDownload(link: string, fileName: string = 'pinterest-video.mp4', dl_path: string = dir, page: Playwright.Page) {
     let [download] = await Promise.all([
         page.waitForEvent('download'),
         //@ts-ignore
@@ -204,15 +207,19 @@ async function mergeVideoFiles(videoDataPaths: string[], outPath: string, videoF
 
     console.log("Failed to merge video files");
 
-    return { filePath: null }
+    return { filePath: null, stream: null }
 }
 async function isFile(path: string) {
     return (await fsPromises.stat(path)).isFile()
 }
 
 await launch_login('firefox').then(async (page) => {
+    page.context().storageState({ path: '../storage/storageState.json' })
     const pin_link = "https://www.pinterest.ca/pin/646477721513976288/";
     const fileName = 'pinterest-video-pin';
     await downloadVideo(pin_link, fileName, page)
         .catch((err) => console.log(`Failed to download video:`, `${err}`))
+        .finally(async () => {
+            await page.context().close();
+        })
 })
