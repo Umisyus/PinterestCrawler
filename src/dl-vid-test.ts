@@ -213,8 +213,8 @@ async function isFile(path: string) {
     return (await fsPromises.stat(path)).isFile()
 }
 
-await launch_login('firefox').then(async (page) => {
-    page.context().storageState({ path: '../storage/storageState.json' })
+await launch_login().then(async (page) => {
+    // page.context().storageState({ path: '../storage/storageState.json' })
     const pin_link = "https://www.pinterest.ca/pin/646477721513976288/";
     const fileName = 'pinterest-video-pin';
     await downloadVideo(pin_link, fileName, page)
