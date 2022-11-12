@@ -38,7 +38,7 @@ export async function downloadVideo(pin_link: string, pin_title: string, page: P
     // request interception for .ts files from
     // https://v2.pinimg.com/videos/mc/hls/1d/3e/52/1d3e52206f9dc2242d5a7f17e1fe701e_360w_20210611T044510_00003.ts
     await videoPage.route('**/*', async (route, req) => {
-        let requestUrl = route.request().url()
+        let requestUrl: string = route.request().url()
         route.continue();
         switch (!!requestUrl) {
             case requestUrl.includes('.ts'):
@@ -167,12 +167,12 @@ async function directDownload(link: string, page: Playwright.Page, dl_path: stri
 }
 
 
-async function mergeVideoFiles(video_data: string[], dir: string, fileName: string = 'merged_video.mp4') {
+async function mergeVideoFiles(videoDataDir: string[], outDir: string, fileName: string = 'merged_video.mp4') {
 
 
     //an array of video path to concatenate
     // read all files
-    let videos = glob.sync(`${dir}/*.ts`)
+    let videos = videoDataDir
 
     const output = fileName
 
@@ -180,11 +180,11 @@ async function mergeVideoFiles(video_data: string[], dir: string, fileName: stri
     //and a transition fadegrayscale of 500ms duration between videos.
     async function oneTransitionMergeVideos() {
         await concat({
-            output,
+            output: `${outDir}/${output}`,
             videos,
             // audio: "/home/username/Downloads/music/music.m4a",
         })
     }
-    return await oneTransitionMergeVideos()
+    await oneTransitionMergeVideos()
 }
 

@@ -39,7 +39,7 @@ export async function launch_login(browserType?: 'chromium' | 'firefox' | 'webki
         .launchPersistentContext('./pinterest-download-data', {
             // headless: true, devtools: true,
             headless: false, devtools: false,
-            executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            // executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         })
 
     // Horrible hack to get around the fact that the browser is not defined

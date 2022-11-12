@@ -4,15 +4,19 @@
         "module": "ESNext",
         "target": "ESNext",
         "outDir": "dist",
-
         "allowJs": true,
         "allowSyntheticDefaultImports": true,
         "noUnusedLocals": false,
         "lib": [
-            "DOM","DOM.Iterable","ESNext.Promise"
+            "DOM",
+            "DOM.Iterable",
+            "ESNext.Promise"
         ]
     },
     "include": [
         "./src/**/*"
+    ],
+    "exclude": [
+        "src/storage/pinterest-board"
     ]
 }
