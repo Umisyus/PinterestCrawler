@@ -11,26 +11,28 @@ const watch_text_selector = 'h3'
 let dir = ''
 export async function downloadVideo(pin_link: string, pin_title: string, page: Page) {
     // Downlaod video from Pinterest
-    let videoPage = await page.context().newPage()
+
+    // Create a new page for video download
+    const video_page = await page.context().newPage();
 
     let __dirname = path.dirname(process.argv[1]);
 
     let PINTEREST_DATA_DIR = path.resolve(`${__dirname + '/' + '..' + '/' + 'src' + '/' + 'storage/pinterest-board/'}`)
-
     dir = path.resolve(`${PINTEREST_DATA_DIR}/`)
 
+    let breakCounter = 0
     let video_data: Buffer[] = [];
     let expected_video_data: {} = {}
 
     // Get video data pieces
     // request interception for .ts files from
     // https://v2.pinimg.com/videos/mc/hls/1d/3e/52/1d3e52206f9dc2242d5a7f17e1fe701e_360w_20210611T044510_00003.ts
-    await videoPage.route('**/*', async (route, req) => {
+    await video_page.route('**\/*', async (route, req) => {
+        await route.continue()
         let isFragmented = true
-        let breakCounter = 0
         // do {
         let requestUrl = route.request().url()
-        route.continue();
+        // route.continue();
         switch (!!requestUrl) {
             case requestUrl.includes('.ts'):
 
@@ -60,6 +62,7 @@ export async function downloadVideo(pin_link: string, pin_title: string, page: P
                             isFragmented = false
                             break
                         }
+                        breakCounter = 0
                     }
 
                 }
@@ -73,15 +76,15 @@ export async function downloadVideo(pin_link: string, pin_title: string, page: P
                 console.log("Video Located!!!", await (await req.response())?.body());
                 console.log(requestUrl);
 
-                page.waitForResponse(requestUrl)
+                video_page.waitForResponse(requestUrl)
 
                 let response = (await route.request().response())
                 let respTxt = response?.text
 
                 console.log("Response text: ", respTxt);
-                await page.goto(requestUrl)
+                await video_page.goto(requestUrl)
 
-                let { download_path, data, stream } = await directDownload(requestUrl, dir, pin_title, page)
+                let { download_path, data, stream } = await directDownload(requestUrl, dir, pin_title, video_page)
                 console.log("Downloaded to: ", download_path);
                 expected_video_data = { download_path, data, stream }
                 isFragmented = false
@@ -93,41 +96,42 @@ export async function downloadVideo(pin_link: string, pin_title: string, page: P
                 breakCounter++
                 break;
         }
+        if (breakCounter > 200) {
+            console.log("Video data pieces not found");
+            console.log("Exiting...");
+            await video_page.close()
+            breakCounter = 0
+            return
+        }
         // }
         // while (isFragmented == true && breakCounter < 20)
     })
 
     console.log("Goto pin link");
-    await videoPage.goto(pin_link, { timeout: 60_000 })
+    await video_page.goto(pin_link, { timeout: 60_000 })
         .catch((err) => console.log(`Could not go to pin link:`, `${err}`));
 
-    await page.$eval('video', (el => el.play()))
+    await video_page.$eval('video', (el => el.play()))
         .catch((err) => console.log(`No video element found!`, `${err}`))
 
     let is_watch_text = false;
     do {
-        await videoPage.waitForTimeout(1_000)
+        await video_page.waitForTimeout(1_000)
         // Watch video until text appears
-        is_watch_text = await videoPage.getByRole("button", { name: 'Watch again' }).isVisible()
-        //  await (await page.$(watch_text_selector))?.isVisible()
+        is_watch_text = await video_page.getByRole("button", { name: 'Watch again' }).isVisible()
+        //  await (await video_page.$(watch_text_selector))?.isVisible()
 
         // button with text
     } while (is_watch_text == false);
 
-    debugger
-
     if (is_watch_text) {
-        let data = {}
         console.log({ video_data });
         if (video_data.length > 0) {
-
-
             video_data.map(async (data: Buffer, i) => {
                 let fpath: string = `${dir}/video_data-part-${i}.ts`
                 await fsPromises.writeFile(fpath, data, { encoding: 'utf8' })
                     .then(() => console.log("File written successfully to: ", fpath))
                     .catch((err) => console.log(`Failed to write file: ${err}`))
-                // merge video files
             });
             // Read vid parts
             let vid_files = await fsPromises.readdir(dir)
@@ -143,9 +147,9 @@ export async function downloadVideo(pin_link: string, pin_title: string, page: P
     }
     console.log("Done");
 
-    // console.log('Closing video page');
+    console.log('Closing video video_page');
 
-    // await videoPage.context().close();
+    await video_page.context().close();
 
     console.log("Video data: ", expected_video_data);
 
@@ -213,11 +217,11 @@ async function isFile(path: string) {
     return (await fsPromises.stat(path)).isFile()
 }
 
-await launch_login().then(async (page) => {
+await launch_login("chromium").then(async (page) => {
     // page.context().storageState({ path: '../storage/storageState.json' })
-    const pin_link = "https://www.pinterest.ca/pin/646477721513976288/";
+    const pin_link = "https://www.pinterest.ca/pin/646477721515567528/";
     const fileName = 'pinterest-video-pin';
-    await downloadVideo(pin_link, fileName, page)
+    return await downloadVideo(pin_link, fileName, page)
         .catch((err) => console.log(`Failed to download video:`, `${err}`))
         .finally(async () => {
             await page.context().close();

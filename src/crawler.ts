@@ -38,8 +38,10 @@ export async function launch_login(browserType?: 'chromium' | 'firefox' | 'webki
     const browser = await playwright[browserType ?? 'chromium']
         .launchPersistentContext('./pinterest-download-data', {
             // headless: true, devtools: true,
-            headless: false, devtools: false,
+            headless: false, devtools: true, slowMo: 200,
+            //  devtools: false,
             // executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            // executablePath: "/Applications/Firefox.app/Contents/MacOS/firefox"
         })
 
     // Horrible hack to get around the fact that the browser is not defined
