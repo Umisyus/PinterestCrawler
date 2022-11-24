@@ -120,7 +120,7 @@ router.addHandler('board', async ({ enqueueLinks, request, page, log, parseWithC
     let pins = await autoScroll(page as any);
     log.info(`Got ${pins.length} pins for board ${title}`, { url: request.loadedUrl });
     log.info(`Saving pins for board ${title}`, { url: request.loadedUrl });
-    await ds.pushData({ boardName: title, sections: [], boardPins: pins })
+    await ds.pushData({ boardName: title, sections: [], boardPins: pins, pinCount: pins.length });
 });
 
 router.addHandler('section', async ({ request, page, log, parseWithCheerio }) => {
