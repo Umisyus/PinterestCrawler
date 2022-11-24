@@ -10,7 +10,7 @@ import { CheerioAPI } from 'cheerio';
 import { Datum } from './pin-board-data-type.js';
 // import login data from file
 
-const login_data = JSON.parse(fs.readFileSync('./storage/login.json', 'utf8'));
+const login_data = JSON.parse(fs.readFileSync('../storage/login.json', 'utf8'));
 
 export let router = createPlaywrightRouter();
 let ds = await Dataset.open('pinterest');
