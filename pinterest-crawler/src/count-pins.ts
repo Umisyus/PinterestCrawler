@@ -1,6 +1,6 @@
 import { Actor } from "apify";
 await Actor.init()
-let ds = await Actor.openDataset("pinterest-json")
+let ds = await Actor.openDataset("pinterest-json-TESTING-JSON-DS")
 let data = (await ds.getData()).items
 let board_set: any = {}
 console.log("analyzing pin data");
