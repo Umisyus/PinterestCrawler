@@ -4,21 +4,12 @@
         "module": "ESNext",
         "target": "ESNext",
         "outDir": "dist",
-        "allowJs": true,
-        "allowSyntheticDefaultImports": true,
         "noUnusedLocals": false,
         "lib": [
-            "DOM",
-            "DOM.Iterable",
-            "ESNext.Promise"
+            "DOM"
         ]
     },
     "include": [
-        "./src/**/*",
-        "exclusions.json"
-    ],
-    "exclude": [
-        "node_modules",
-        "./src/storage/**/*"
+        "./src/**/*"
     ]
 }

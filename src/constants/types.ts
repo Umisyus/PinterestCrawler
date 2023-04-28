@@ -10,7 +10,7 @@ export interface Board {
     boardName: string,
     boardLink: string,
     boardPins: Pin[],
-    sections: Section[] | []
+    sections: Section[]
 }
 export interface Pin {
     title: string,
