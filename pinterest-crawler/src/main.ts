@@ -27,7 +27,7 @@ await Actor.exit();
 async function getData(userName = 'dracana96', THRESHOLD = 100) {
     // NODE VERSION
 
-    const ds = await new Actor().openDataset('pinterest-json-TESTING-JSON-DS')
+    const ds = await new Actor().openKeyValueStore('pinterest-json-TESTING-JSON-KVS')
 
     console.log(userName)
     let pins_url_bookmark = (userName: string, bookmark: string) => `https://www.pinterest.ca/resource/UserPinsResource/get/?source_url=%2F${userName}%2Fpins%2F&data=%7B%22options%22%3A%7B%22is_own_profile_pins%22%3Atrue%2C%22username%22%3A%22${userName}%22%2C%22field_set_key%22%3A%22grid_item%22%2C%22pin_filter%22%3Anull%2C%22bookmarks%22%3A%5B%22${bookmark}%22%5D%7D%2C%22context%22%3A%7B%7D%7D&_=1670393784068`
@@ -61,7 +61,7 @@ async function getData(userName = 'dracana96', THRESHOLD = 100) {
                 log.info(`Total # of boardless pins: ${bl_list.length}`);
 
                 bl_list.forEach(async (pin: any) => {
-                    await ds.pushData(pin)
+                    await ds.setValue(pin.id, pin)
                 })
 
                 bl_stop = true;
@@ -82,8 +82,7 @@ async function getData(userName = 'dracana96', THRESHOLD = 100) {
             log.info(`Total # of pins: ${list.length}`);
 
             list.forEach(async pin => {
-                await ds.pushData(pin)
-
+                await ds.setValue(pin.id, pin)
             })
             console.log("saved NORMAL PINS to DATASET");
             break;
@@ -98,6 +97,7 @@ async function getData(userName = 'dracana96', THRESHOLD = 100) {
     log.info(`Total # of pins: ${list.length}`);
     log.info(`Total # of boardless pins: ${bl_list.length}`);
 
+    log.info(`GRAND TOTAL: ${list.length + bl_list.length}`)
     log.info('Done, will now exit...')
 }
 
