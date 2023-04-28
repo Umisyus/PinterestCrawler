@@ -4,15 +4,29 @@
         "module": "ESNext",
         "target": "ESNext",
         "outDir": "dist",
-
-        "allowJs": true,
-        "allowSyntheticDefaultImports": true,
+        "skipLibCheck": true,
         "noUnusedLocals": false,
         "lib": [
-            "DOM","DOM.Iterable","ESNext.Promise"
+            "DOM"
         ]
     },
+    "exclude": [
+        "node_modules",
+        "dist",
+        "build",
+        "coverage",
+        "test",
+        "tests",
+        "examples",
+        "docs",
+        "src/**/*.test.ts",
+        "src/**/*.spec.ts",
+        "src/**/*.d.ts",
+        "src/**/*.test.tsx",
+        "src/**/*.spec.tsx",
+        "src/**/*.d.tsx"
+    ],
     "include": [
-        "./src/**/*"
+        "src/**/*.ts"
     ]
 }
