@@ -71,4 +71,4 @@ COPY . ./
 
 
 # Run the image.
-CMD npm start --silent
+CMD npm start:prod --silent
