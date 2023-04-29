@@ -1,15 +1,12 @@
 import { KeyValueStore, log } from 'crawlee';
-import fetch from 'node-fetch'
 import { Actor } from 'apify';
 
 // Initialize the Apify SDK
-
-// Get input of the actor (here only for demonstration purposes).
 await Actor.init()
 
 // Get input of the actor.
-// let { threshold, profileName } = await Actor.getInput()
-let { threshold, profileName } = { threshold: 10_000, profileName: 'dracana96' }
+
+let { threshold, profileName } = await Actor.getInput<any>()
 
 log.info(`threshold: ${threshold}, profileName: ${profileName}`)
 if (!profileName) throw new Error('No username specified! Please specify a username to crawl.')
