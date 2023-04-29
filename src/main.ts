@@ -69,9 +69,6 @@ async function getData(userName = 'dracana96', THRESHOLD = 100) {
         if (list.length >= THRESHOLD || bookmark.includes('end')) {
             log.info(`Total # of pins: ${list.length}`);
 
-            // list.forEach(async pin => {
-            //     await ds.setValue(pin.id, pin)
-            // })
             await saveToKVS(list, ds)
             break;
         }
