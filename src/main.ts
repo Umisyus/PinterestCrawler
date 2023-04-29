@@ -39,6 +39,7 @@ async function getData(userName = 'dracana96', THRESHOLD = 100) {
         let response_json = <any> await (await fetch(query)).json();
         let bookmark = response_json.resource.options.bookmarks[0];
 
+        // Add the boardless pins to the list
         if (bl_stop == false) {
             let bl_response_json = <any> await (await bl_fetch(bl_query)).json();
             let bl_bookmark = bl_response_json.resource.options.bookmarks[0];
