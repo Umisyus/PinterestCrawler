@@ -56,8 +56,8 @@ async function getData(userName = 'dracana96', THRESHOLD = 100) {
                 await saveToKVS(bl_list, ds)
 
                 bl_stop = true;
+                log.info('Saved boardless pins to dataset')
             }
-            log.info('Saved boardless pins to dataset')
 
         }
 
