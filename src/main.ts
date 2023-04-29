@@ -1,5 +1,4 @@
 import { KeyValueStore, log } from 'crawlee';
-import fetch from 'node-fetch'
 import { Actor } from 'apify';
 
 // Initialize the Apify SDK
