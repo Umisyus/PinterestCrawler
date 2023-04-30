@@ -32,13 +32,14 @@ async function getData(userName = 'dracana96', THRESHOLD = 100) {
     let list: any[] = []
     let bl_list = []
     let bl_stop = false;
+    let go = true
     do {
-        let response_json = <any> await (await fetch(query)).json();
+        let response_json = <any>await (await fetch(query)).json();
         let bookmark = response_json.resource.options.bookmarks[0];
 
         // Add the boardless pins to the list
         if (bl_stop == false) {
-            let bl_response_json = <any> await (await bl_fetch(bl_query)).json();
+            let bl_response_json = <any>await (await bl_fetch(bl_query)).json();
             let bl_bookmark = bl_response_json.resource.options.bookmarks[0];
             query = pins_url_bookmark(userName, bookmark)
             bl_query = boardless_pins_url_bookmark(userName, bl_bookmark)
@@ -67,14 +68,17 @@ async function getData(userName = 'dracana96', THRESHOLD = 100) {
             log.info(`Total # of pins: ${list.length}`);
 
             await saveToKVS(list, ds)
-            break;
+            .then(()=>{
+                go = false
+                console.log("Saving Complete.");
+            })
         }
 
         // Refresh the query with the new bookmark
-        response_json = <any> await (await fetch(query)).json();
+        response_json = <any>await (await fetch(query)).json();
         bookmark = response_json.resource.options.bookmarks[0];
         query = pins_url_bookmark(userName, bookmark)
-    } while (true)
+    } while (go)
 
     const normalPinsLen = list.length;
     const boardlessPinsLen = bl_list.length;
@@ -97,21 +101,21 @@ async function bl_fetch(bl_query: string) {
 
     return await fetch(`${bl_query}`, {
         headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:108.0) Gecko/20100101 Firefox/108.0',
-            'Accept': 'application/json, text/javascript, */*, q=0.01',
-            'Accept-Language': 'en',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Referer': 'https://www.pinterest.ca/',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-APP-VERSION': '489864f',
-            'X-Pinterest-AppState': 'active',
-            'X-Pinterest-PWS-Handler': 'www/[username].js',
-            'DNT': '1',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-origin',
-            'Connection': 'keep-alive',
-            'TE': 'trailers'
+            // 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:108.0) Gecko/20100101 Firefox/108.0',
+            // 'Accept': 'application/json, text/javascript, */*, q=0.01',
+            // 'Accept-Language': 'en',
+            // 'Accept-Encoding': 'gzip, deflate, br',
+            // 'Referer': 'https://www.pinterest.ca/',
+            // 'X-Requested-With': 'XMLHttpRequest',
+            // 'X-APP-VERSION': '489864f',
+            // 'X-Pinterest-AppState': 'active',
+            // 'X-Pinterest-PWS-Handler': 'www/[username].js',
+            // 'DNT': '1',
+            // 'Sec-Fetch-Dest': 'empty',
+            // 'Sec-Fetch-Mode': 'cors',
+            // 'Sec-Fetch-Site': 'same-origin',
+            // 'Connection': 'keep-alive',
+            // 'TE': 'trailers'
         }
     });
 
