@@ -3,11 +3,11 @@ import { Actor } from 'apify';
 import fetch from 'node-fetch'
 
 // Initialize the Apify SDK
-// await Actor.init()
+ await Actor.init()
 
 // Get input of the actor.
 
-let { threshold, profileName } = await Actor.getInput<any>()
+let { threshold, profileName } = await Actor.getInput<any>();
 console.log(profileName, threshold);
 
 log.info(`threshold: ${threshold}, profileName: ${profileName}`)
