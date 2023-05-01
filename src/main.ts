@@ -3,11 +3,12 @@ import { Actor } from 'apify';
 import fetch from 'node-fetch'
 
 // Initialize the Apify SDK
-await Actor.init()
+// await Actor.init()
 
 // Get input of the actor.
 
 let { threshold, profileName } = await Actor.getInput<any>()
+console.log(profileName, threshold);
 
 log.info(`threshold: ${threshold}, profileName: ${profileName}`)
 if (!profileName) throw new Error('No username specified! Please specify a username to crawl.')
@@ -69,10 +70,10 @@ async function getData(userName = 'dracana96', THRESHOLD = 100) {
             log.info(`Total # of pins: ${list.length}`);
 
             await saveToKVS(list, ds)
-            .then(()=>{
-                go = false
-                console.log("Saving Complete.");
-            })
+                .then(() => {
+                    go = false
+                    console.log("Saving Complete.");
+                })
         }
 
         // Refresh the query with the new bookmark
