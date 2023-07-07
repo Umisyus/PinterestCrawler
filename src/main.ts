@@ -16,7 +16,7 @@ if (!profileName) throw new Error('No username specified! Please specify a usern
 const regex = /[\s\,\/\:]/ig;
 
 let s = new Date().toLocaleString()
-  s.replace(regex, '-').replace(/-{2,}/,'_');
+  s.replace(regex, '-').replace(/-{2,}/,'-');
 
 await getData(profileName, threshold, json_dataset ?? 'pinterest-json ' + s)
 
