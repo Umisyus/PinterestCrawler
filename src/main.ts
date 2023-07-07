@@ -43,8 +43,8 @@ async function getData(userName:string, THRESHOLD = 100, json_dataset_name:strin
     // NODE VERSION
 console.log(`Saving to: ${json_dataset}`);
 
-    //const ds = await Actor.openKeyValueStore(json_dataset_name)
-    const ds = await Actor.openDataset(json_dataset_name)
+    const ds = await Actor.openKeyValueStore(json_dataset_name)
+    const ds_s = await Actor.openDataset(json_dataset_name)
 
     console.log(userName)
     let pins_url_bookmark = (userName: string, bookmark: string) => `https://www.pinterest.ca/resource/UserPinsResource/get/?source_url=%2F${userName}%2Fpins%2F&data=%7B%22options%22%3A%7B%22is_own_profile_pins%22%3Atrue%2C%22username%22%3A%22${userName}%22%2C%22field_set_key%22%3A%22grid_item%22%2C%22pin_filter%22%3Anull%2C%22bookmarks%22%3A%5B%22${bookmark}%22%5D%7D%2C%22context%22%3A%7B%7D%7D&_=1670393784068`
@@ -77,7 +77,7 @@ console.log(`Saving to: ${json_dataset}`);
                 log.info(`Total # of boardless pins: ${bl_list.length}`);
 
                 await saveToKVS(bl_list, ds)
-
+await saveToDataset(bl_list,ds_s)
                 bl_stop = true;
                 log.info('Saved boardless pins to dataset')
             }
@@ -93,12 +93,12 @@ console.log(`Saving to: ${json_dataset}`);
             log.info(`Total # of pins: ${list.length}`);
 
             await saveToKVS(list, ds)
-                .then(() => {
-                    go = false
-                    console.log("Saving Complete.");
-                })
+                await saveToDataset(list,ds_s)
+                
+                go = false
+                console.log("Saving Complete.");
                 break
-        }
+            }
 
         // Refresh the query with the new bookmark
         response_json = <any>await (await fetch(query)).json();
@@ -122,10 +122,15 @@ console.log(`Saving to: ${json_dataset}`);
     log.info('Done, will now exit...')
 }
 
-async function saveToKVS(data: any[], ds: Dataset<Dictionary>) {
+async function saveToKVS(data: any[], ds: KeyValueStore) {
     for (let index = 0; index < data.length; index++) {
         const element = data[index];
-        //await ds.setValue(element.id, element)
+        await ds.setValue(element.id, element)
+    }
+}
+async function saveToDataset(data: any[], ds: Dataset<Dictionary>) {
+    for (let index = 0; index < data.length; index++) {
+        const element = data[index];
           await ds.pushData(element)
     }
 }
