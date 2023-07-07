@@ -1,28 +1,37 @@
 {
-    "title": "Actor input schema",
-    "description": "This is actor input schema",
-    "type": "object",
-    "schemaVersion": 1,
-    "properties": {
-      "profileName": {
-        "title": "profileName",
-        "type": "string",
-        "description": "Profile name",
-        "editor": "textfield"
-      },
-      "threshold": {
-        "title": "threshold",
-        "type": "integer",
-        "description": "Number of pins to collect before stopping crawler.",
-        "default": 100,
-        "editor": "number",
-        "prefill": 100,
-        "minimum": 10,
-        "unit": "10"
-      }
+  "title": "Actor input schema",
+  "description": "This is actor input schema",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "profileName": {
+      "title": "profileName",
+      "type": "string",
+      "description": "Profile name",
+      "editor": "textfield"
     },
-    "required": [
-      "profileName",
-      "threshold"
-    ]
-  }
+    "threshold": {
+      "title": "threshold",
+      "type": "integer",
+      "description": "Number of pins to collect before stopping crawler.",
+      "default": 100,
+      "editor": "number",
+      "prefill": 100,
+      "minimum": 10,
+      "unit": "10"
+    },
+    "json_dataset": {
+      "title": "JSON Results Datsset",
+      "type": "string",
+      "description": "Name or ID of results dataset",
+      "default": "pinterest-json",
+      "editor": "textfield",
+      "nullable": true
+    }
+  },
+  "required": [
+    "profileName",
+    "threshold",
+    "json_dataset"
+  ]
+}
