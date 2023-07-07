@@ -7,9 +7,9 @@ import fetch from 'node-fetch'
 
 // Get input of the actor.
 
-let { threshold=10, profileName=`dracana96`, json_dataset =`pins_json`}
-= {threshold:10,profileName:`dracana96`,json_dataset:`pins_json`}
-// = await Actor.getInput<any>();
+let { threshold=10, profileName, json_dataset =`pins_json`}
+//= {threshold:10,profileName:`dracana96`,json_dataset:`pins_json`}
+ = await Actor.getInput<any>();
 console.log(profileName, threshold);
 
 log.info(`threshold: ${threshold}, profileName: ${profileName}`)
