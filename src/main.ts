@@ -25,6 +25,7 @@ await Actor.exit();
 
 async function getData(userName:string, THRESHOLD = 100, json_dataset:string) {
     // NODE VERSION
+console.log(`Saving to: ${json_dataset}`);
 
     const ds = await Actor.openKeyValueStore(json_dataset)
 
