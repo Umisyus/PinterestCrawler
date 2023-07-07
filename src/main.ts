@@ -1,4 +1,4 @@
-import { KeyValueStore, log } from 'crawlee';
+import { Dataset, Dictionary, KeyValueStore, log } from 'crawlee';
 import { Actor } from 'apify';
 import fetch from 'node-fetch'
 
@@ -7,7 +7,9 @@ import fetch from 'node-fetch'
 
 // Get input of the actor.
 
-let { threshold, profileName, json_dataset } = await Actor.getInput<any>();
+let { threshold=10, profileName=`dracana96`, json_dataset =`pins_json`}
+= {threshold:10,profileName:`dracana96`,json_dataset:`pins_json`}
+// = await Actor.getInput<any>();
 console.log(profileName, threshold);
 
 log.info(`threshold: ${threshold}, profileName: ${profileName}`)
@@ -41,7 +43,8 @@ async function getData(userName:string, THRESHOLD = 100, json_dataset_name:strin
     // NODE VERSION
 console.log(`Saving to: ${json_dataset}`);
 
-    const ds = await Actor.openKeyValueStore(json_dataset_name)
+    //const ds = await Actor.openKeyValueStore(json_dataset_name)
+    const ds = await Actor.openDataset(json_dataset_name)
 
     console.log(userName)
     let pins_url_bookmark = (userName: string, bookmark: string) => `https://www.pinterest.ca/resource/UserPinsResource/get/?source_url=%2F${userName}%2Fpins%2F&data=%7B%22options%22%3A%7B%22is_own_profile_pins%22%3Atrue%2C%22username%22%3A%22${userName}%22%2C%22field_set_key%22%3A%22grid_item%22%2C%22pin_filter%22%3Anull%2C%22bookmarks%22%3A%5B%22${bookmark}%22%5D%7D%2C%22context%22%3A%7B%7D%7D&_=1670393784068`
@@ -54,7 +57,7 @@ console.log(`Saving to: ${json_dataset}`);
     let list: any[] = []
     let bl_list = []
     let bl_stop = false;
-    let go = true
+    let go:boolean = true
     do {
         let response_json = <any>await (await fetch(query)).json();
         let bookmark = response_json.resource.options.bookmarks[0];
@@ -101,7 +104,12 @@ console.log(`Saving to: ${json_dataset}`);
         response_json = <any>await (await fetch(query)).json();
         bookmark = response_json.resource.options.bookmarks[0];
         query = pins_url_bookmark(userName, bookmark)
-    } while (go)
+
+        if (go !== true ) {
+            break
+        }
+
+    } while (go==true)
 
     const normalPinsLen = list.length;
     const boardlessPinsLen = bl_list.length;
@@ -114,10 +122,11 @@ console.log(`Saving to: ${json_dataset}`);
     log.info('Done, will now exit...')
 }
 
-async function saveToKVS(data: any[], ds: KeyValueStore) {
+async function saveToKVS(data: any[], ds: Dataset<Dictionary>) {
     for (let index = 0; index < data.length; index++) {
         const element = data[index];
-        await ds.setValue(element.id, element)
+        //await ds.setValue(element.id, element)
+          await ds.pushData(element)
     }
 }
 async function bl_fetch(bl_query: string) {
