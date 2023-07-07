@@ -13,7 +13,12 @@ console.log(profileName, threshold);
 log.info(`threshold: ${threshold}, profileName: ${profileName}`)
 if (!profileName) throw new Error('No username specified! Please specify a username to crawl.')
 
-await getData(profileName, threshold, json_dataset ?? 'pinterest-json' + new Date().toLocaleString())
+const regex = /[\s\,\/\:]/ig;
+
+let s = new Date().toLocaleString()
+  s.replace(regex, '-').replace(/-{2,}/,'_');
+
+await getData(profileName, threshold, json_dataset ?? 'pinterest-json ' + s)
 
 // Exit successfully
 await Actor.exit();
