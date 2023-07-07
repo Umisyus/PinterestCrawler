@@ -94,6 +94,7 @@ console.log(`Saving to: ${json_dataset}`);
                     go = false
                     console.log("Saving Complete.");
                 })
+                break
         }
 
         // Refresh the query with the new bookmark
