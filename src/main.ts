@@ -15,14 +15,13 @@ if (!profileName) throw new Error('No username specified! Please specify a usern
 
 const regex = /[\s\,\/\:]/ig;
 
-let s = new Date().toLocaleString()
-  s.replace(regex, '-')
+let d_str = ('pinterest-json-' + new Date().toLocaleString())
+  .replace(regex, '-')
   .replace(/-{2,}/,'_')
   .replace(/-$/,'')
   .replace(/^-/,'')
 
-
-await getData(profileName, threshold, json_dataset ?? 'pinterest-json ' + s)
+await getData(profileName, threshold, json_dataset ?? d_str)
 
 // Exit successfully
 await Actor.exit();
