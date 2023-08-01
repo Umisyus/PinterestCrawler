@@ -2,6 +2,7 @@
     "extends": "@apify/tsconfig",
     "compilerOptions": {
         "module": "ESNext",
+        "moduleResolution": "Node",
         "target": "ESNext",
         "outDir": "dist",
         "skipLibCheck": true,

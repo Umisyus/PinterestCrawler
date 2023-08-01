@@ -3,13 +3,13 @@ import { Actor } from 'apify';
 import fetch from 'node-fetch'
 
 // Initialize the Apify SDK
- await Actor.init()
+await Actor.init()
 
 // Get input of the actor.
 
-let { threshold=10, profileName, json_dataset =`pins_json`}
-//= {threshold:10,profileName:`dracana96`,json_dataset:`pins_json`}
- = await Actor.getInput<any>();
+let { threshold = 10, profileName, json_dataset = `pins_json`, MAX_TIME = 65_000 }
+    //= {threshold:10,profileName:`dracana96`,json_dataset:`pins_json`}
+    = await Actor.getInput<any>();
 console.log(profileName, threshold);
 
 log.info(`threshold: ${threshold}, profileName: ${profileName}`)
@@ -17,31 +17,31 @@ if (!profileName) throw new Error('No username specified! Please specify a usern
 
 const regex = /[\s\,\/\:]/ig;
 
-let fmt_ds_name = (s:string) =>
- s
-.replace(regex, '-')
-.replace(/-{2,}/,'_')
-.replace(/-$/,'')
-.replace(/^-/,'')
-.replace(/_/g,'-')
+let fmt_ds_name = (s: string) =>
+    s
+        .replace(regex, '-')
+        .replace(/-{2,}/, '_')
+        .replace(/-$/, '')
+        .replace(/^-/, '')
+        .replace(/_/g, '-')
 
 let d_str = fmt_ds_name(json_dataset)
 
-try { 
+try {
 
-await getData(profileName, threshold, d_str)
+    await getData(profileName, threshold, d_str)
 
-} catch(e) {
-console.log(d_str);
-console.error(e);
+} catch (e) {
+    console.log(d_str);
+    console.error(e);
 
 }
 // Exit successfully
 await Actor.exit();
 
-async function getData(userName:string, THRESHOLD = 100, json_dataset_name:string) {
+async function getData(userName: string, THRESHOLD = 100, json_dataset_name: string) {
     // NODE VERSION
-console.log(`Saving to: ${json_dataset}`);
+    console.log(`Saving to: ${json_dataset}`);
 
     const ds = await Actor.openKeyValueStore(json_dataset_name)
     const ds_s = await Actor.openDataset(json_dataset_name)
@@ -57,7 +57,11 @@ console.log(`Saving to: ${json_dataset}`);
     let list: any[] = []
     let bl_list = []
     let bl_stop = false;
-    let go:boolean = true
+    let go: boolean = true
+
+    const startTime = Date.now()
+    let isTimedOut = () => Date.now() - startTime > MAX_TIME
+
     do {
         let response_json = <any>await (await fetch(query)).json();
         let bookmark = response_json.resource.options.bookmarks[0];
@@ -77,7 +81,7 @@ console.log(`Saving to: ${json_dataset}`);
                 log.info(`Total # of boardless pins: ${bl_list.length}`);
 
                 await saveToKVS(bl_list, ds)
-await saveToDataset(bl_list,ds_s)
+                await saveToDataset(bl_list, ds_s)
                 bl_stop = true;
                 log.info('Saved boardless pins to dataset')
             }
@@ -93,23 +97,23 @@ await saveToDataset(bl_list,ds_s)
             log.info(`Total # of pins: ${list.length}`);
 
             await saveToKVS(list, ds)
-                await saveToDataset(list,ds_s)
-                
-                go = false
-                console.log("Saving Complete.");
-                break
-            }
+            await saveToDataset(list, ds_s)
+
+            go = false
+            console.log("Saving Complete.");
+            break
+        }
 
         // Refresh the query with the new bookmark
         response_json = <any>await (await fetch(query)).json();
         bookmark = response_json.resource.options.bookmarks[0];
         query = pins_url_bookmark(userName, bookmark)
 
-        if (go !== true ) {
+        if (go !== true) {
             break
         }
 
-    } while (go==true)
+    } while (go == true || isTimedOut())
 
     const normalPinsLen = list.length;
     const boardlessPinsLen = bl_list.length;
@@ -131,7 +135,7 @@ async function saveToKVS(data: any[], ds: KeyValueStore) {
 async function saveToDataset(data: any[], ds: Dataset<Dictionary>) {
     for (let index = 0; index < data.length; index++) {
         const element = data[index];
-          await ds.pushData(element)
+        await ds.pushData(element)
     }
 }
 async function bl_fetch(bl_query: string) {
