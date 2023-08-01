@@ -63,12 +63,12 @@ async function getData(userName: string, THRESHOLD = 100, json_dataset_name: str
     let isTimedOut = () => Date.now() - startTime > MAX_TIME
 
     do {
-        let response_json = <any>await (await fetch(query)).json();
+        let response_json = <any> await (await fetch(query)).json();
         let bookmark = response_json.resource.options.bookmarks[0];
 
         // Add the boardless pins to the list
         if (bl_stop == false) {
-            let bl_response_json = <any>await (await bl_fetch(bl_query)).json();
+            let bl_response_json = <any> await (await bl_fetch(bl_query)).json();
             let bl_bookmark = bl_response_json.resource.options.bookmarks[0];
             query = pins_url_bookmark(userName, bookmark)
             bl_query = boardless_pins_url_bookmark(userName, bl_bookmark)
@@ -98,6 +98,7 @@ async function getData(userName: string, THRESHOLD = 100, json_dataset_name: str
 
             await saveToKVS(list, ds)
             await saveToDataset(list, ds_s)
+            await saveToDataset(list, await Actor.openDataset())
 
             go = false
             console.log("Saving Complete.");
@@ -105,7 +106,7 @@ async function getData(userName: string, THRESHOLD = 100, json_dataset_name: str
         }
 
         // Refresh the query with the new bookmark
-        response_json = <any>await (await fetch(query)).json();
+        response_json = <any> await (await fetch(query)).json();
         bookmark = response_json.resource.options.bookmarks[0];
         query = pins_url_bookmark(userName, bookmark)
 
