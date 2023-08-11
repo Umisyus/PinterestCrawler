@@ -1,41 +1,43 @@
 import { Dataset, Dictionary, KeyValueStore, log } from 'crawlee';
 import { Actor } from 'apify';
 import fetch from 'node-fetch'
+import cheerio from 'cheerio'
 
 // Initialize the Apify SDK
 await Actor.init()
 
 // Get input of the actor.
 
-let { threshold = 10, profileName, json_dataset = `pins_json`, MAX_TIME = 65_000 }
+let { threshold = 10, profileName, json_dataset = `pinterest_json`, MAX_TIME = 65_000 }
     //= {threshold:10,profileName:`dracana96`,json_dataset:`pins_json`}
     = await Actor.getInput<any>();
-console.log(profileName, threshold);
-
-log.info(`threshold: ${threshold}, profileName: ${profileName}`)
-if (!profileName) throw new Error('No username specified! Please specify a username to crawl.')
-
-const regex = /[\s\,\/\:]/ig;
-
-let fmt_ds_name = (s: string) =>
-    s
-        .replace(regex, '-')
-        .replace(/-{2,}/, '_')
-        .replace(/-$/, '')
-        .replace(/^-/, '')
-        .replace(/_/g, '-')
-
-let d_str = fmt_ds_name(json_dataset)
 
 try {
+    log.info(`threshold: ${threshold}, profileName: ${profileName}`)
+    if (new URL(profileName)) profileName = await parseFromPage(profileName)
+
+    if (profileName == undefined || profileName == null || profileName === '') {
+        throw new Error('profileName was invalid! Please specify a valid profileName to crawl.')
+    }
+    const regex = /[\s\,\/\:]/ig;
+
+    let fmt_ds_name = (s: string) =>
+        s
+            .replace(regex, '-')
+            .replace(/-{2,}/, '_')
+            .replace(/-$/, '')
+            .replace(/^-/, '')
+            .replace(/_/g, '-')
+
+    let d_str = fmt_ds_name(json_dataset)
 
     await getData(profileName, threshold, d_str)
 
 } catch (e) {
-    console.log(d_str);
     console.error(e);
-
+    await Actor.exit({ exitCode: 1 })
 }
+
 // Exit successfully
 await Actor.exit();
 
@@ -141,24 +143,26 @@ async function saveToDataset(data: any[], ds: Dataset<Dictionary>) {
 }
 async function bl_fetch(bl_query: string) {
 
-    return await fetch(`${bl_query}`, {
-        headers: {
-            // 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:108.0) Gecko/20100101 Firefox/108.0',
-            // 'Accept': 'application/json, text/javascript, */*, q=0.01',
-            // 'Accept-Language': 'en',
-            // 'Accept-Encoding': 'gzip, deflate, br',
-            // 'Referer': 'https://www.pinterest.ca/',
-            // 'X-Requested-With': 'XMLHttpRequest',
-            // 'X-APP-VERSION': '489864f',
-            // 'X-Pinterest-AppState': 'active',
-            // 'X-Pinterest-PWS-Handler': 'www/[username].js',
-            // 'DNT': '1',
-            // 'Sec-Fetch-Dest': 'empty',
-            // 'Sec-Fetch-Mode': 'cors',
-            // 'Sec-Fetch-Site': 'same-origin',
-            // 'Connection': 'keep-alive',
-            // 'TE': 'trailers'
-        }
-    });
+    return await fetch(`${bl_query}`);
 
+}
+
+async function parseFromPage(profileName: any): Promise<string | null> {
+    try {
+        let profile_url = new URL(profileName).href
+        if (profile_url.includes('it')) {
+            profile_url = (await fetch(profile_url)).url
+        }
+
+        const bd = await (await fetch(profile_url)).text()
+
+        const $ = cheerio.load(bd);
+        const id_xpath = ('//span[contains(text(),"Art")]')
+        // Remove the @ sign from the profile handle
+        return $('span').first().text().replace('@', '');
+
+    } catch (error) {
+        log.error("FAILED TO PARSE PROFILE ID FROM HTML.");
+        return null
+    }
 }
