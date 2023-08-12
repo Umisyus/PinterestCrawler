@@ -6,19 +6,37 @@ import cheerio from 'cheerio'
 // Initialize the Apify SDK
 await Actor.init()
 
-// Get input of the actor.
+interface Input {
+    threshold: number;
+    profileName: string;
+    json_dataset: string;
+}
 
-let { threshold = 10, profileName, json_dataset = `pinterest_json`, MAX_TIME = 65_000 }
-    //= {threshold:10,profileName:`dracana96`,json_dataset:`pins_json`}
-    = await Actor.getInput<any>();
+// Get input of the actor.
+const MAX_TIME = 65_000;
+
+let { json_dataset = 'pinterest_crawler', profileName, threshold = 200 } = await Actor.getInput() as Input;
 
 try {
     log.info(`threshold: ${threshold}, profileName: ${profileName}`)
-    if (new URL(profileName)) profileName = await parseFromPage(profileName)
+    // Is URL?
+    try {
+        if (profileName.includes('http')) {
+            log.info(`Reading from URL ${profileName} ...`)
+            const p_id = await parseFromPage(profileName);
+            if (p_id !== null) {
+                profileName = p_id
+            }
+        }
+    } catch (error) {
+        // Was not a URL, so we can let it pass on.
+        // log.error('Failed to parse profilename from URL.')
+    }
 
     if (profileName == undefined || profileName == null || profileName === '') {
         throw new Error('profileName was invalid! Please specify a valid profileName to crawl.')
     }
+
     const regex = /[\s\,\/\:]/ig;
 
     let fmt_ds_name = (s: string) =>
@@ -27,7 +45,6 @@ try {
             .replace(/-{2,}/, '_')
             .replace(/-$/, '')
             .replace(/^-/, '')
-            .replace(/_/g, '-')
 
     let d_str = fmt_ds_name(json_dataset)
 
@@ -42,13 +59,13 @@ try {
 await Actor.exit();
 
 async function getData(userName: string, THRESHOLD = 100, json_dataset_name: string) {
-    // NODE VERSION
     console.log(`Saving to: ${json_dataset}`);
 
     const ds = await Actor.openKeyValueStore(json_dataset_name)
     const ds_s = await Actor.openDataset(json_dataset_name)
 
-    console.log(userName)
+    log.info(`Collecting pins from ${profileName}, saving to dataset ${json_dataset_name}`)
+
     let pins_url_bookmark = (userName: string, bookmark: string) => `https://www.pinterest.ca/resource/UserPinsResource/get/?source_url=%2F${userName}%2Fpins%2F&data=%7B%22options%22%3A%7B%22is_own_profile_pins%22%3Atrue%2C%22username%22%3A%22${userName}%22%2C%22field_set_key%22%3A%22grid_item%22%2C%22pin_filter%22%3Anull%2C%22bookmarks%22%3A%5B%22${bookmark}%22%5D%7D%2C%22context%22%3A%7B%7D%7D&_=1670393784068`
     function boardless_pins_url_bookmark(userName: string, bookmark: string) {
         return `https://www.pinterest.ca/resource/BoardlessPinsResource/get/?source_url=%2F${userName}%2F&data=%7B%22options%22%3A%7B%22redux_normalize_feed%22%3Atrue,%22bookmarks%22%3A%5B%22${bookmark}%22%5D,%22userId%22%3A%22646477858918931565%22%7D,%22context%22%3A%7B%7D%7D&_=1671685984351`
@@ -56,7 +73,9 @@ async function getData(userName: string, THRESHOLD = 100, json_dataset_name: str
 
     let query = pins_url_bookmark(userName, "")
     let bl_query = boardless_pins_url_bookmark(userName, "")
-    let list: any[] = []
+    // let list: any[] = []
+    let list_length: number = 0
+
     let bl_list = []
     let bl_stop = false;
     let go: boolean = true
@@ -91,20 +110,16 @@ async function getData(userName: string, THRESHOLD = 100, json_dataset_name: str
         }
 
         // Add the pins to the list
-        let [...pins] = response_json.resource_response.data
-        list.push(...pins)
-        log.info(`Running total: ${list.length}`);
+        let [...pins] = response_json.resource_response.data;
 
-        if (list.length >= THRESHOLD || bookmark.includes('end')) {
-            log.info(`Total # of pins: ${list.length}`);
+        await saveToKVS(pins, ds)
+        await saveToDataset(pins, ds_s)
+        await saveToDataset(pins, await Actor.openDataset())
 
-            await saveToKVS(list, ds)
-            await saveToDataset(list, ds_s)
-            await saveToDataset(list, await Actor.openDataset())
+        log.info(`Running total: ${list_length += pins.length}`);
 
+        if (list_length >= THRESHOLD || bookmark.includes('end')) {
             go = false
-            console.log("Saving Complete.");
-            break
         }
 
         // Refresh the query with the new bookmark
@@ -118,8 +133,9 @@ async function getData(userName: string, THRESHOLD = 100, json_dataset_name: str
 
     } while (go == true || isTimedOut())
 
-    const normalPinsLen = list.length;
+    const normalPinsLen = list_length;
     const boardlessPinsLen = bl_list.length;
+    console.log("Saving Complete.");
 
     log.info(`Total # of pins: ${normalPinsLen}`);
     log.info(`Total # of boardless pins: ${boardlessPinsLen}`);
@@ -165,4 +181,5 @@ async function parseFromPage(profileName: any): Promise<string | null> {
         log.error("FAILED TO PARSE PROFILE ID FROM HTML.");
         return null
     }
+
 }
