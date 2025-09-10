@@ -7,7 +7,7 @@
         "skipLibCheck": true,
         "noUnusedLocals": false,
         "lib": [
-            "DOM"
+            "DOM","es5","es6","dom.iterable"
         ]
     },
     "exclude": [
