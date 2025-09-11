@@ -2,7 +2,7 @@ import {log} from 'crawlee';
 import {Actor} from 'apify';
 import {getProfileBoards} from "./getProfileBoards"
 import {fetchBoardPins} from "./fetchPins";
-import {BoardPinData} from "./BoardData";
+import {Board, BoardPinData} from "./BoardData";
 import {savetoDS} from "./util";
 
 await Actor.init()
@@ -19,25 +19,28 @@ log.info(`threshold: ${threshold}, profileName: ${profileName}`);
 let pins = new Array<BoardPinData>();
 
 
-let boards = (await getProfileBoards(profileName));
+let boards = (await getProfileBoards(profileName)).filter(b => b.privacy !== "secret")
 
-for (let i = 0; i < boards.reverse().length; i++) {
+for (let i = 0; i < boards.length; i++) {
 
     let nextBookmark = '';
     let preBookmark = '';
 
     while (nextBookmark !== BOOKMARK_END) {
 
-
         await fetchBoardPins(profileName, boards[i], nextBookmark)
             .then((boardP) => {
-                if (boardP === null || boardP === undefined || boardP.pins === null || boardP.pins === undefined)
+                if (boardP === null || boardP === undefined || boardP.pins === null || boardP.pins === undefined) {
                     log.info("Error: Failed parsing pins for " + boards[i])
+                    // throw new Error("Error getting pins")
+                }
 
-                pins.push(...boardP.pins)
-                console.info({pins})
-                preBookmark = nextBookmark
-                nextBookmark = boardP.bookmark[0]
+                if (boardP !== null) {
+                    pins.push(...boardP.pins)
+                    console.info({pins})
+                    preBookmark = nextBookmark
+                    nextBookmark = boardP.bookmark[0]
+                }
             })
         if (!!nextBookmark && nextBookmark.length > 0 && nextBookmark == preBookmark)
             break;
