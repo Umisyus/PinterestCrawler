@@ -1,7 +1,7 @@
 //  Get pins of User
-import {Datum, PinData} from "./types/PinData";
+import {Datum} from "./types/PinData";
 import fetch from "node-fetch";
-import {BoardFeedResource, BoardPinData} from "./BoardData";
+import {Board, BoardFeedResource} from "./BoardData";
 
 async function fetchProfilePins(profileName: string): Promise<Datum | void> {
 
@@ -16,7 +16,7 @@ async function fetchProfilePins(profileName: string): Promise<Datum | void> {
             'X-Requested-With': 'XMLHttpRequest',
             'X-APP-VERSION': '29ea70d',
             'X-Pinterest-AppState': 'active',
-            'X-Pinterest-Source-Url': `/${profileName}/`,
+            'X-Pinterest-Source-Url': `/${profileName}/}`,
             'X-Pinterest-PWS-Handler': 'www/[username].js',
             'screen-dpr': '1',
             'X-B3-TraceId': '20de15f19c649fd0',
@@ -39,7 +39,7 @@ async function fetchProfilePins(profileName: string): Promise<Datum | void> {
 }
 
 
-export async function fetchBoardPins(profileName: string, boardName: string, bookmark: string) {
+export async function fetchBoardPins(profileName: string, board: Board, bookmark: string) {
     const options = {
         "credentials": "include",
         "headers": {
@@ -49,7 +49,7 @@ export async function fetchBoardPins(profileName: string, boardName: string, boo
             "X-Requested-With": "XMLHttpRequest",
             "X-APP-VERSION": "d10b87e",
             "X-Pinterest-AppState": "background",
-            "X-Pinterest-Source-Url": "/dracana96/my-saves/",
+            "X-Pinterest-Source-Url": `${board.url}`,
             "X-Pinterest-PWS-Handler": "www/[username]/[slug].js",
             "screen-dpr": "1",
             "X-B3-TraceId": "1247eee7428b11df",
@@ -65,9 +65,18 @@ export async function fetchBoardPins(profileName: string, boardName: string, boo
         "method": "GET",
         "mode": "cors"
     }
-    return await fetch(`https://ca.pinterest.com/resource/BoardFeedResource/get/?source_url=%2F${profileName}%2F${boardName}%2F&data=%7B%22options%22%3A%7B%22add_vase%22%3Atrue%2C%22board_id%22%3A%22646477790200098004%22%2C%22field_set_key%22%3A%22react_grid_pin%22%2C%22filter_section_pins%22%3Afalse%2C%22is_react%22%3Atrue%2C%22prepend%22%3Afalse%2C%22page_size%22%3A15%2C%22bookmarks%22%3A%5B%22${bookmark}%22%5D%2C%22rerankMethod%22%3A%22repin%22%7D%2C%22context%22%3A%7B%7D%7D&_=1757364346192`, options)
-        .then(async r => await r.json())
-        .then(o => o as BoardFeedResource)
-        // Return BOOKMARK!?
-        .then(bpr => bpr.resource_response.data)
+    // Get last
+    const boardName = board.name.split('/').filter(Boolean).pop();
+
+    return await fetch(`https://ca.pinterest.com/resource/BoardFeedResource/get/?source_url=%2F${profileName}%2F${boardName}%2F&data=%7B%22options%22%3A%7B%22add_vase%22%3Atrue%2C%22board_id%22%3A%22${board.id}%22%2C%22field_set_key%22%3A%22react_grid_pin%22%2C%22filter_section_pins%22%3Afalse%2C%22is_react%22%3Atrue%2C%22prepend%22%3Afalse%2C%22page_size%22%3A25%2C%22bookmarks%22%3A%5B%22${bookmark}%22%5D%2C%22rerankMethod%22%3A%22repin%22%7D%2C%22context%22%3A%7B%7D%7D&_=1757364346192`, options)
+        .then(async r => await r.json() as BoardFeedResource)
+        .then((o: BoardFeedResource) => {
+            if (!!o.resource_response.data)
+                throw new Error(`Error getting ${boardName} data!`)
+                return {
+                    // Return BOOKMARK!?
+                    bookmark: o.resource.options.bookmarks,
+                    pins: o.resource_response.data
+                }
+        })
 }

@@ -7,7 +7,7 @@ async function savetoKVS(data: any[], ds: KeyValueStore) {
     }
 }
 
-export async function savetoDS([data]: any, ds: Dataset) {
+export async function savetoDS(data: any[], ds: Dataset) {
     for (let index = 0; index < data.length; index++) {
         const element = data[index];
         await ds.pushData(element)
