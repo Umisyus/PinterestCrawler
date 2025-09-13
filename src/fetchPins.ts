@@ -1,10 +1,10 @@
 //  Get pins of User
 import {Datum} from "./types/PinData";
 import fetch from "node-fetch";
-import {Board, BoardFeedResource} from "./BoardData";
+import {Board, BoardFeedResource} from "./types/BoardData.js";
 import {log} from "crawlee";
 
-async function fetchProfilePins(profileName: string): Promise<Datum | void> {
+export async function fetchProfilePins(profileName: string): Promise<Datum | void> {
 
     const options = {
         method: 'GET',

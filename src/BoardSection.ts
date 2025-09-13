@@ -1,95 +1,64 @@
-import {BoardSectionResponse, SectionData} from "./BoardSectionResponse";
-import {Board} from "./BoardData";
+import {BoardSectionPin, BoardSectionResponse, DatumType, SectionData} from "./types/BoardSectionResponse.js";
+import {Board} from "./types/BoardData.js";
+import {getBoardSlug} from "./getProfileBoards";
 
-async function getBoardSectionPins(profileName: string, board: Board, section: SectionData, bookmark: string) {
 
-    const options = {
-        method: 'GET',
-        headers: {
-            cookie: 'csrftoken=90b8426d075425197a2294661b6e14d3; _pinterest_sess=TWc9PSZDZEhTbGZVbGIxeXBTcnhNOHd5cUg1VUIxMzUyNHhaU1I5YjNoZWFmdTZHbFZrRFBkNGVlM2xkbytrbFRtNU1peUFrdFZSTXJaN2RuOU5VTVA1QUloMDBiNW41elU1ZklzZEVSVFpaYmxwbz0maDBNWmg0dEh2ZFloRWJFWStubG8yM0NkNXUwPQ%3D%3D; _auth=0',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0',
-            Accept: 'application/json, text/javascript, */*, q=0.01',
-            'Accept-Language': 'en',
-            'Accept-Encoding': 'gzip, deflate, br, zstd',
-            Referer: 'https://ca.pinterest.com/',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-APP-VERSION': '4e42856',
-            'X-Pinterest-AppState': 'active',
-            'X-Pinterest-Source-Url': '/dracana96/concept-art/creatures/',
-            'X-Pinterest-PWS-Handler': 'www/[username]/[slug]/[section_slug].js',
-            'screen-dpr': '1',
-            'X-B3-TraceId': '1ddec6b8d84d7f25',
-            'X-B3-SpanId': '75986f02bf8a5eb5',
-            'X-B3-ParentSpanId': '1ddec6b8d84d7f25',
-            'X-B3-Flags': '0',
-            DNT: '1',
-            'Alt-Used': 'ca.pinterest.com',
-            Connection: 'keep-alive',
-            Cookie: 'csrftoken=088b2b9080a0a920a3160a70638838f7; _pinterest_sess=TWc9PSYxRjljVW56K3dISm12MjN1MVRtWldreC91SVljbmJGNHl2eTZrTmIxZVg4WU9FaW9qT29aRzh3MUJYTHpZdnF3NWF5YkRDL3gzOEQwSkdJS20xUUo1WC9ieFNNbzkzNE1ZOXY4eGQvOFVkUT0mcGRCOEJJYVZ4b2xuYU85QmJmcXVSVjRpdDVFPQ==; _auth=0; _routing_id="46715fc0-cba3-40e0-8cbb-2418ef0d22e5"; sessionFunnelEventLogged=1',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-origin'
-        }
+async function getBoardSectionPins(profileName: string, boardSlug: string, sectionSlug: string, sectionId: string, bookmark?: string) {
+    // Compose a source URL path used in query and header
+    const sourceUrl = `/${profileName}/${boardSlug}/${sectionSlug}/`;
+
+    // Compose the data object for the 'data' query param with optional bookmark
+    const dataObj = {
+        options: {
+            page_size: 25,
+            prepend: false,
+            section_id: sectionId,
+            bookmarks: bookmark
+        },
+        context: {}
     };
 
-    let json: SectionData[] = await fetch('https://ca.pinterest.com/resource/BoardSectionPinsResource/get?source_url=%2Fdracana96%2Fconcept-art%2Fcreatures%2F&data=%7B%22options%22%3A%7B%22page_size%22%3A25%2C%22prepend%22%3Afalse%2C%22section_id%22%3A%225240292013187850544%22%2C%22bookmarks%22%3A%5B%22LT42NDY0Nzc3MjE1MTUzMzk2NTN8NDl8NDZ8NzYyMTIzNzI5NDczMTE3OCpHUUwqfGExNTllMjYwNzI3YzlhZDlhYWRlZGMxODA1N2UyOTVjNjM3OTQ0MTVlNmU2YzZmZTMyMzI4N2M0NTcyYmVmYTd8TkVXfA%3D%3D%22%5D%7D%2C%22context%22%3A%7B%7D%7D&_=1757561989525', options)
-        .then(response => response.json())
-        .then(response => response)
-        .catch(err => console.error(err));
-    if (json && "resource_response" in json) {
-        const data = (json as unknown as BoardSectionResponse).resource_response.data;
-        return data
-    }
-    return []
-// // Fetch
-//
-//     let headers = {
-//         // "credentials": "include",
-//         "headers": {
-//             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0",
-//             "Accept": "application/json, text/javascript, */*, q=0.01",
-//             "Accept-Language": "en",
-//             "X-Requested-With": "XMLHttpRequest",
-//             "X-APP-VERSION": "4e42856",
-//             "X-Pinterest-AppState": "active",
-//             "X-Pinterest-Source-Url": "/dracana96/concept-art/creatures/",
-//             "X-Pinterest-PWS-Handler": "www/[username]/[slug]/[section_slug].js",
-//             "screen-dpr": "1",
-//             "X-B3-TraceId": "1ddec6b8d84d7f25",
-//             "X-B3-SpanId": "75986f02bf8a5eb5",
-//             "X-B3-ParentSpanId": "1ddec6b8d84d7f25",
-//             "X-B3-Flags": "0",
-//             "Alt-Used": "ca.pinterest.com",
-//             "Sec-Fetch-Dest": "empty",
-//             "Sec-Fetch-Mode": "cors",
-//             "Sec-Fetch-Site": "same-origin",
-//             DNT: '1',
-//             Connection: 'keep-alive',
-//             'Accept-Encoding': 'gzip, deflate, br, zstd',
-//             cookie: 'csrftoken=90b8426d075425197a2294661b6e14d3; _pinterest_sess=TWc9PSZDZEhTbGZVbGIxeXBTcnhNOHd5cUg1VUIxMzUyNHhaU1I5YjNoZWFmdTZHbFZrRFBkNGVlM2xkbytrbFRtNU1peUFrdFZSTXJaN2RuOU5VTVA1QUloMDBiNW41elU1ZklzZEVSVFpaYmxwbz0maDBNWmg0dEh2ZFloRWJFWStubG8yM0NkNXUwPQ%3D%3D; _auth=0',
-//
-//         },
-//         "referrer": "https://ca.pinterest.com/",
-//         "method": "GET",
-//         // "mode": "cors"
-//     };
-//
-//
-//     let input = encodeURIComponent(JSON.stringify(
-//         {
-//             "page_size": 25,
-//             "prepend": false,
-//             "section_id": section.id,
-//             "bookmarks": [`${bookmark}`]
-//         }));
-//
-//     let resp = await fetch(`https://ca.pinterest.com/resource/BoardSectionPinsResource/get/?source_url=%2F${profileName}%2F${getBoardSlug(board.url)}%2F${section.title}%2F&data=` + input + "&_=1757561989525", headers);
-//     let json = await resp.json() as BoardSectionResponse
-//     if (json && "resource_response" in json) {
-//         if ("json.resource_response.data" in json) {
-//             return json.resource_response.data as unknown as BoardSectionPin[]
-//         }
-//     }
+    // Encode data JSON as URL parameter
+    const dataParam = encodeURIComponent(JSON.stringify(dataObj));
+
+    // Construct the full URL
+    const url = `https://ca.pinterest.com/resource/BoardSectionPinsResource/get/?source_url=${encodeURIComponent(sourceUrl)}&data=${dataParam}&_=${Date.now()}`;
+
+    // Compose headers with dynamic parts
+    const headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0",
+        "Accept": "application/json, text/javascript, */*, q=0.01",
+        "Accept-Language": "en",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-APP-VERSION": "c267e1e",
+        "X-Pinterest-AppState": "active",
+        "X-Pinterest-Source-Url": sourceUrl,
+        "X-Pinterest-PWS-Handler": `www/${profileName}/${boardSlug}/${sectionSlug}.js`,
+        "screen-dpr": "1",
+        "X-B3-TraceId": "48fbba6dc51594cf",
+        "X-B3-SpanId": "2f6f558a3fd64d00",
+        "X-B3-ParentSpanId": "48fbba6dc51594cf",
+        "X-B3-Flags": "0",
+        "Alt-Used": "ca.pinterest.com",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin"
+    };
+
+    // Perform the fetch
+    const response = await fetch(url, {
+        credentials: "include",
+        headers,
+        referrer: "https://ca.pinterest.com/",
+        method: "GET",
+        mode: "cors"
+    });
+
+    // Parse and return the pins array from the response
+    const json = await response.json();
+    const pins = (json as BoardSectionResponse).resource_response.data;
+
+    return pins;
 }
 
 async function getBoardSections(board: Board) {
@@ -122,25 +91,121 @@ async function getBoardSections(board: Board) {
     let data: SectionData[]
     let input = encodeURIComponent(JSON.stringify({"options": {"board_id": board.id}, "context": {}}))
     let sections = await fetch("https://ca.pinterest.com/resource/BoardSectionsResource/get/?source_url=%2Fdracana96%2Fconcept-art%2F&data=" + input, options);
-    data = (await sections.json() as unknown as BoardSectionResponse).resource_response.data
+    data = (await sections.json() as unknown as BoardSectionResponse).resource_response.data as unknown as SectionData[]
     if (data !== undefined) {
         return data
     }
     return []
 }
 
-let bookmark = "";
-let profileName = "";
-//
-// (async () => {
-//
-//     let boards = await getProfileBoards(profileName);
-//
-//     let sections = await getBoardSections(boards[0]);
-//
-//     let pins = await getBoardSectionPins(profileName, boards[0], sections[0], bookmark);
-//
-//     console.info({pins})
-// })()
+
+/**
+ * Fetch a single page of pins for a board section using bookmark.
+ */
+async function fetchBoardSectionPinsPage(
+    profileName: string,
+    board: Board,
+    section: SectionData,
+    bookmark: string
+): Promise<{ data: BoardSectionPin[]; bookmark: string[] } | null> {
+    const sourceUrl = `/${profileName}/${getBoardSlug(board.url)}/${section.slug}/`;
+
+    const data = {
+        options: {
+            page_size: 25,
+            prepend: false,
+            section_id: section.id,
+            bookmarks: bookmark ? [bookmark] : []
+        },
+        context: {}
+    };
+
+    const url = `https://ca.pinterest.com/resource/BoardSectionPinsResource/get/?source_url=${encodeURIComponent(sourceUrl)}&data=${encodeURIComponent(JSON.stringify(data))}&_=${Date.now()}`;
+
+    const headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0",
+        "Accept": "application/json, text/javascript, */*, q=0.01",
+        "Accept-Language": "en",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-APP-VERSION": "c267e1e",
+        "X-Pinterest-AppState": "active",
+        "X-Pinterest-Source-Url": sourceUrl,
+        "X-Pinterest-PWS-Handler": `www/${profileName}/${getBoardSlug(board.url)}/${section.slug}.js`,
+        "screen-dpr": "1",
+        "X-B3-TraceId": "48fbba6dc51594cf",
+        "X-B3-SpanId": "2f6f558a3fd64d00",
+        "X-B3-ParentSpanId": "48fbba6dc51594cf",
+        "X-B3-Flags": "0",
+        "Alt-Used": "ca.pinterest.com",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin"
+    };
+
+    try {
+        const response = await fetch(url, {
+            credentials: "include",
+            headers,
+            method: "GET",
+            mode: "cors",
+            referrer: "https://ca.pinterest.com/"
+        });
+
+        if (!response.ok) {
+            console.error(`HTTP error! status: ${response.status}`);
+            return null;
+        }
+
+        const json: BoardSectionResponse = await response.json();
+
+        if (json && json.resource_response && json.resource_response.data) {
+            return {
+                data: json.resource_response.data,
+                bookmark: json.resource?.options.bookmarks ?? []
+            };
+        }
+    } catch (error) {
+        console.error("Fetch error:", error);
+    }
+
+    return null;
+}
+
+/**
+ * Paginate through all pins in a board section by bookmark,
+ * collecting, and returning all pins.
+ */
+export async function fetchAllBoardSectionPins(
+    profileName: string,
+    board: Board,
+    section: SectionData
+): Promise<BoardSectionPin[]> {
+    const results: BoardSectionPin[] = [];
+    const BOOKMARK_END = "-end-";
+    let nextBookmark = "";
+    let preBookmark = "";
+
+    while (nextBookmark !== BOOKMARK_END) {
+        const page = await fetchBoardSectionPinsPage(profileName, board, section, nextBookmark);
+
+        if (!page || !page.data) {
+            console.info("No data or error occurred when fetching page");
+            break;
+        }
+
+        // FILTER STORY
+        results.push(...page.data
+            .filter(p => p.type !== DatumType.Story)
+        );
+
+        preBookmark = nextBookmark;
+        nextBookmark = page.bookmark?.[0] ?? "";
+
+        if (nextBookmark === preBookmark) {
+            break; // Prevent infinite loop if bookmark does not change
+        }
+    }
+    return results;
+}
 
 export {getBoardSectionPins, getBoardSections}

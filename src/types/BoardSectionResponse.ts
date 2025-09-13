@@ -1,177 +1,4 @@
-import {Board} from "./BoardData";
-
-async function getBoardSectionPins(profileName: string, board: Board, section_id: string, bookmark: string) {
-    let headers = {
-        // "credentials": "include",
-        "headers": {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0",
-            "Accept": "application/json, text/javascript, */*, q=0.01",
-            "Accept-Language": "en",
-            "X-Requested-With": "XMLHttpRequest",
-            "X-APP-VERSION": "4e42856",
-            "X-Pinterest-AppState": "active",
-            "X-Pinterest-Source-Url": "/dracana96/concept-art/creatures/",
-            "X-Pinterest-PWS-Handler": "www/[username]/[slug]/[section_slug].js",
-            "screen-dpr": "1",
-            "X-B3-TraceId": "1ddec6b8d84d7f25",
-            "X-B3-SpanId": "75986f02bf8a5eb5",
-            "X-B3-ParentSpanId": "1ddec6b8d84d7f25",
-            "X-B3-Flags": "0",
-            "Alt-Used": "ca.pinterest.com",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin"
-        },
-        "referrer": "https://ca.pinterest.com/",
-        "method": "GET",
-        // "mode": "cors"
-    };
-
-    let input = encodeURIComponent(JSON.stringify({
-        "options": {
-            "page_size": 25,
-            "prepend": false,
-            "section_id": section_id,
-            "bookmarks": [`${bookmark}`]
-        }, "context": {}
-    }))
-
-    let resp = await fetch(`https://ca.pinterest.com/resource/BoardSectionPinsResource/get/?source_url=%2F${profileName}%2F${board.name}%2Fcreatures%2F&data=` + input + "&_=1757561989525", headers);
-    let json = await resp.json()
-
-    return json.data as BoardSectionResponse[]
-
-}
-
-
-// //
-// const data = {
-//     options: {
-//         profileName,
-//         board_id: board.id,
-//         bookmark
-//     },
-//     context: {}
-// };
-// // "https://ca.pinterest.com/resource/BoardSectionPinsResource/get/?source_url=%2Fdracana96%2Fconcept-art%2Fcreatures%2F&data=%7B%22options%22%3A%7B%22page_size%22%3A25%2C%22prepend%22%3Afalse%2C%22section_id%22%3A%225240292013187850544%22%2C%22bookmarks%22%3A%5B%22LT42NDY0Nzc3MjE1MTUzMzk2NTN8NDl8NDZ8NzYyMTIzNzI5NDczMTE3OCpHUUwqfGExNTllMjYwNzI3YzlhZDlhYWRlZGMxODA1N2UyOTVjNjM3OTQ0MTVlNmU2YzZmZTMyMzI4N2M0NTcyYmVmYTd8TkVXfA%3D%3D%22%5D%7D%2C%22context%22%3A%7B%7D%7D&_=1757561989525"
-//
-// const url = `https://ca.pinterest.com/resource/BoardSectionsResource/get/?source_url=/dracana96/concept-art/creatures/&data=${encodeURIComponent(JSON.stringify(data))}`;
-// let headers = {
-//     "credentials": "include",
-//     "headers": {
-//         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0",
-//         "Accept": "application/json, text/javascript, */*, q=0.01",
-//         "Accept-Language": "en",
-//         "X-Requested-With": "XMLHttpRequest",
-//         "X-APP-VERSION": "4e42856",
-//         "X-Pinterest-AppState": "active",
-//         "X-Pinterest-Source-Url": "/dracana96/concept-art/creatures/",
-//         "X-Pinterest-PWS-Handler": "www/[username]/[slug]/[section_slug].js",
-//         "screen-dpr": "1",
-//         "X-B3-TraceId": "1ddec6b8d84d7f25",
-//         "X-B3-SpanId": "75986f02bf8a5eb5",
-//         "X-B3-ParentSpanId": "1ddec6b8d84d7f25",
-//         "X-B3-Flags": "0",
-//         "Alt-Used": "ca.pinterest.com",
-//         "Sec-Fetch-Dest": "empty",
-//         "Sec-Fetch-Mode": "cors",
-//         "Sec-Fetch-Site": "same-origin"
-//     },
-//     "referrer": "https://ca.pinterest.com/",
-//     "method": "GET",
-//     "mode": "cors"
-// };
-// // @ts-ignore
-// await fetch(url, headers);
-// //
-
-async function getBoardSections(board: Board) {
-    let options = {
-        // "credentials": "include",
-        "headers": {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0",
-            "Accept": "application/json, text/javascript, */*, q=0.01",
-            "Accept-Language": "en",
-            "X-Requested-With": "XMLHttpRequest",
-            "X-APP-VERSION": "4e42856",
-            "X-Pinterest-AppState": "background",
-            "X-Pinterest-Source-Url": "/dracana96/concept-art/",
-            "X-Pinterest-PWS-Handler": "www/[username]/[slug].js",
-            "screen-dpr": "1",
-            "X-B3-TraceId": "0a810140b4ffb0d4",
-            "X-B3-SpanId": "67796b20f01c32e4",
-            "X-B3-ParentSpanId": "0a810140b4ffb0d4",
-            "X-B3-Flags": "0",
-            "Alt-Used": "ca.pinterest.com",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "same-origin",
-            "Priority": "u=0"
-        },
-        "referrer": "https://ca.pinterest.com/",
-        "method": "GET",
-        // "mode": "cors"
-    }
-    let data = []
-    let input = "%7B%22options%22%3A%7B%22board_id%22%3A%22" + board.id + "%22%7D%2C%22context%22%3A%7B%7D%7D";
-    let sections = await fetch("https://ca.pinterest.com/resource/BoardSectionsResource/get/?source_url=%2Fdracana96%2Fconcept-art%2F&data=" + input, options);
-    data = (sections as unknown as BoardSectionResponse).resource_response.data
-    if (data !== undefined) {
-        return data
-    }
-    return []
-}
-
-// await fetch("https://ca.pinterest.com/resource/BoardSectionPinsResource/get/?source_url=%2Fdracana96%2Fconcept-art%2Fcreatures%2F&data=%7B%22options%22%3A%7B%22page_size%22%3A25%2C%22prepend%22%3Afalse%2C%22section_id%22%3A%225240292013187850544%22%2C%22bookmarks%22%3A%5B%22LT42NDY0Nzc3MjE1MTUzMzk2NTN8NDl8NDZ8NzYyMTIzNzI5NDczMTE3OCpHUUwqfGExNTllMjYwNzI3YzlhZDlhYWRlZGMxODA1N2UyOTVjNjM3OTQ0MTVlNmU2YzZmZTMyMzI4N2M0NTcyYmVmYTd8TkVXfA%3D%3D%22%5D%7D%2C%22context%22%3A%7B%7D%7D&_=1757561989525", {
-//     "credentials": "include",
-//     "headers": {
-//         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0",
-//         "Accept": "application/json, text/javascript, */*, q=0.01",
-//         "Accept-Language": "en",
-//         "X-Requested-With": "XMLHttpRequest",
-//         "X-APP-VERSION": "4e42856",
-//         "X-Pinterest-AppState": "active",
-//         "X-Pinterest-Source-Url": "/dracana96/concept-art/creatures/",
-//         "X-Pinterest-PWS-Handler": "www/[username]/[slug]/[section_slug].js",
-//         "screen-dpr": "1",
-//         "X-B3-TraceId": "1ddec6b8d84d7f25",
-//         "X-B3-SpanId": "75986f02bf8a5eb5",
-//         "X-B3-ParentSpanId": "1ddec6b8d84d7f25",
-//         "X-B3-Flags": "0",
-//         "Alt-Used": "ca.pinterest.com",
-//         "Sec-Fetch-Dest": "empty",
-//         "Sec-Fetch-Mode": "cors",
-//         "Sec-Fetch-Site": "same-origin"
-//     },
-//     "referrer": "https://ca.pinterest.com/",
-//     "method": "GET",
-//     "mode": "cors"
-// });
-// await fetch("https://ca.pinterest.com/resource/BoardSectionResource/get/?source_url=%2Fdracana96%2Fconcept-art%2Fcreatures%2F&data=%7B%22options%22%3A%7B%22board_slug%22%3A%22concept-art%22%2C%22section_slug%22%3A%22creatures%22%2C%22username%22%3A%22dracana96%22%7D%2C%22context%22%3A%7B%7D%7D&_=1757529394863", {
-//     "credentials": "include",
-//     "headers": {
-//         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:141.0) Gecko/20100101 Firefox/141.0",
-//         "Accept": "application/json, text/javascript, */*, q=0.01",
-//         "Accept-Language": "en",
-//         "X-Requested-With": "XMLHttpRequest",
-//         "X-APP-VERSION": "f1c6631",
-//         "X-Pinterest-AppState": "active",
-//         "X-Pinterest-Source-Url": "/dracana96/concept-art/creatures/",
-//         "X-Pinterest-PWS-Handler": "www/[username]/[slug]/[section_slug].js",
-//         "screen-dpr": "1",
-//         "X-B3-TraceId": "4c72d90176b21272",
-//         "X-B3-SpanId": "492cd0bd1625ebe9",
-//         "X-B3-ParentSpanId": "4c72d90176b21272",
-//         "X-B3-Flags": "0",
-//         "Sec-Fetch-Dest": "empty",
-//         "Sec-Fetch-Mode": "cors",
-//         "Sec-Fetch-Site": "same-origin"
-//     },
-//     "referrer": "https://ca.pinterest.com/",
-//     "method": "GET",
-//     "mode": "cors"
-// });
-
+import {Board} from "./BoardData.js";
 
 export interface ClientContext {
     analysis_ua: AnalysisUa;
@@ -254,15 +81,15 @@ export interface Options {
     board_id: string;
 }
 
-// export interface ResourceResponse {
-//     status: string;
-//     code: number;
-//     message: string;
-//     endpoint_name: string;
-//     data: BoardSection[];
-//     x_pinterest_sli_endpoint_name: string;
-//     http_status: number;
-// }
+export interface ResourceResponse {
+    status: string;
+    code: number;
+    message: string;
+    endpoint_name: string;
+    data: BoardSectionPin[];
+    x_pinterest_sli_endpoint_name: string;
+    http_status: number;
+}
 
 export interface SectionData {
     node_id: string;
@@ -376,7 +203,7 @@ export interface ResourceResponse {
     code: number;
     message: string;
     endpoint_name: string;
-    data: SectionData[];
+    data: BoardSectionPin[];
     bookmark: string;
     x_pinterest_sli_endpoint_name: string;
     http_status: number;
@@ -702,4 +529,5 @@ export enum TrackingParams {
 
 export enum DatumType {
     Pin = "pin",
+    Story = "story"
 }

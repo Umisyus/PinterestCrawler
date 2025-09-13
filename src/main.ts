@@ -1,14 +1,24 @@
 import {log} from 'crawlee';
 import {Actor} from 'apify';
-import {getProfileBoards} from "./getProfileBoards"
+import {getBoardSlug, getProfileBoards} from "./getProfileBoards"
 import {fetchBoardPins} from "./fetchPins";
-import {Board, BoardPinData} from "./BoardData";
+import {Board, BoardPinData} from "./types/BoardData.js";
 import {savetoDS} from "./util";
+import {fetchAllBoardSectionPins, getBoardSectionPins, getBoardSections} from "./BoardSection";
+import {SectionData} from "./types/BoardSectionResponse.js";
+import {PinData} from "./types/PinData";
 
 await Actor.init()
 
 const keyValueStore = await Actor.openKeyValueStore('pin-images')
 const dataset = await Actor.openDataset("pin-json-dataset")
+
+for (let datasetKey in dataset) {
+    dataset.getData({limit: 10}).then(r => r.items)
+        .then(d=>{
+            d.filter(pin => pin)
+        })
+}
 
 const {threshold, profileName} = await Actor.getInput<any>() ?? {threshold: 100, profileName: 'dracana96'}
 if (!profileName) throw new Error('No username specified! Please specify a username to crawl.')
@@ -18,7 +28,6 @@ log.info(`threshold: ${threshold}, profileName: ${profileName}`);
 
 let pins = new Array<BoardPinData>();
 
-
 let boards = (await getProfileBoards(profileName)).filter(b => b.privacy !== "secret")
 
 for (let i = 0; i < boards.length; i++) {
@@ -26,6 +35,7 @@ for (let i = 0; i < boards.length; i++) {
     let nextBookmark = '';
     let preBookmark = '';
 
+    // Get board pins
     while (nextBookmark !== BOOKMARK_END) {
 
         await fetchBoardPins(profileName, boards[i], nextBookmark)
@@ -37,7 +47,7 @@ for (let i = 0; i < boards.length; i++) {
 
                 if (boardP !== null) {
                     pins.push(...boardP.pins)
-                    console.info({pins})
+                    log.info(`Pin count: ${pins.length}`)
                     preBookmark = nextBookmark
                     nextBookmark = boardP.bookmark[0]
                 }
@@ -52,7 +62,25 @@ for (let i = 0; i < boards.length; i++) {
     nextBookmark = ""
     preBookmark = ""
 
+    let sections = await getBoardSections(boards[i])
+    let sL = sections.length;
+
+    if (sL > 0) {
+        log.info(`Found ${sL} section(s)`)
+
+        sections.forEach(async (section) => {
+            //             let p = await getBoardSectionPins(profileName, getBoardSlug(boards[i].url), section.title, section.id, "");
+            let p = await fetchAllBoardSectionPins(profileName, boards[i], section);
+            log.info(`Saving pins for section: ${section.title}...`)
+
+            if ((p !== null && p !== undefined) && Array.isArray(p) && p.length > 0)
+                await savetoDS(Array.from(p), dataset)
+        })
+    }
+
     log.info("Complete " + boards[i].name)
 
 }
-log.info(`Total of ${dataset.getInfo().then(d => d?.itemCount)} items collected.`)
+log.info(`Total of ${await dataset.getInfo().then(d => d?.itemCount)} items collected.`)
+
+await Actor.exit()

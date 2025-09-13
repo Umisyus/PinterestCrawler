@@ -1,6 +1,6 @@
 // get all boards
 import fetch from "node-fetch";
-import {Board, BoardFeedResource, BoardPinData} from "./BoardData";
+import {Board, BoardFeedResource, BoardPinData} from "./types/BoardData.js";
 import * as url from "node:url";
 
 export async function getProfileBoards(profileName: string) {
@@ -46,5 +46,5 @@ export async function getProfileBoards(profileName: string) {
 }
 
 export function getBoardSlug(url: String) {
-    return url.split('/', 3).filter(Boolean).pop() ?? null
+    return url.split('/', 3).filter(Boolean).pop()!
 }

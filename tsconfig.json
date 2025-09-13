@@ -3,15 +3,24 @@
   "compilerOptions": {
     "module": "ES2022",
     "target": "ES2022",
+    "moduleResolution": "node",
     "outDir": "dist",
+    "importHelpers": true,
     "skipLibCheck": true,
     "noUnusedLocals": false,
     "lib": [
       "DOM",
       "es5",
       "es6",
-      "dom.iterable"
-    ]
+      "dom.iterable",
+      "ESNext"
+    ],
+    "baseUrl": "./",
+    "paths": {
+      "tslib": [
+        "path/to/node_modules/tslib/tslib.d.ts"
+      ]
+    }
   },
   "exclude": [
     "node_modules",
