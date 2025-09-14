@@ -27,8 +27,7 @@ export async function fetchProfilePins(profileName: string): Promise<Datum | voi
             DNT: '1',
             'Alt-Used': 'ca.pinterest.com',
             Connection: 'keep-alive',
-            Cookie: 'csrftoken=088b2b9080a0a920a3160a70638838f7; _pinterest_sess=TWc9PSYxRjljVW56K3dISm12MjN1MVRtWldreC91SVljbmJGNHl2eTZrTmIxZVg4WU9FaW9qT29aRzh3MUJYTHpZdnF3NWF5YkRDL3gzOEQwSkdJS20xUUo1WC9ieFNNbzkzNE1ZOXY4eGQvOFVkUT0mcGRCOEJJYVZ4b2xuYU85QmJmcXVSVjRpdDVFPQ==; _auth=0; _routing_id="9501345b-717b-4f5f-84fb-0cffe568ff09"; sessionFunnelEventLogged=1',
-            'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Dest': 'empty',
             'Sec-Fetch-Mode': 'cors',
             'Sec-Fetch-Site': 'same-origin'
         }
