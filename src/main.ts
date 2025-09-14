@@ -13,12 +13,6 @@ await Actor.init()
 const keyValueStore = await Actor.openKeyValueStore('pin-images')
 const dataset = await Actor.openDataset("pin-json-dataset")
 
-for (let datasetKey in dataset) {
-    dataset.getData({limit: 10}).then(r => r.items)
-        .then(d=>{
-            d.filter(pin => pin)
-        })
-}
 
 const {threshold, profileName} = await Actor.getInput<any>() ?? {threshold: 100, profileName: 'dracana96'}
 if (!profileName) throw new Error('No username specified! Please specify a username to crawl.')
