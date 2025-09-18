@@ -18,11 +18,8 @@ async function getBoardSectionPins(profileName: string, boardSlug: string, secti
         context: {}
     };
 
-    // Encode data JSON as URL parameter
-    const dataParam = encodeURIComponent(JSON.stringify(dataObj));
-
     // Construct the full URL
-    const url = `https://ca.pinterest.com/resource/BoardSectionPinsResource/get/?source_url=${encodeURIComponent(sourceUrl)}&data=${dataParam}&_=${Date.now()}`;
+    const url = `https://ca.pinterest.com/resource/BoardSectionPinsResource/get/?source_url=${encodeURIComponent(sourceUrl)}&data=${encodeURIComponent(JSON.stringify(dataObj))}&_=${Date.now()}`;
 
     // Compose headers with dynamic parts
     const headers = {
@@ -59,6 +56,56 @@ async function getBoardSectionPins(profileName: string, boardSlug: string, secti
     const pins = (json as BoardSectionResponse).resource_response.data;
 
     return pins;
+}
+
+export async function fetchBoardSectionPins(profileName: string, boardName: string, sectionName: string, sectionId: string, bookmark?: string) {
+    const sourceUrl = `/${profileName}/${boardName}/${sectionName}/`;
+    const dataObj = {
+        options: {
+            page_size: 25,
+            prepend: false,
+            section_id: sectionId,
+            bookmarks: bookmark ? [bookmark] : []
+        },
+        context: {}
+    };
+    const url = `https://ca.pinterest.com/resource/BoardSectionPinsResource/get?source_url=${encodeURIComponent(sourceUrl)}&data=${encodeURIComponent(JSON.stringify(dataObj))}&_=${Date.now()}`;
+
+    const options = {
+        method: 'GET',
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0',
+            Accept: 'application/json, text/javascript, */*, q=0.01',
+            'Accept-Language': 'en',
+            'Accept-Encoding': 'gzip, deflate, br, zstd',
+            Referer: 'https://ca.pinterest.com/',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-APP-VERSION': '4e42856',
+            'X-Pinterest-AppState': 'active',
+            'X-Pinterest-Source-Url': sourceUrl,
+            'X-Pinterest-PWS-Handler': `www/${profileName}/${boardName}/${sectionName}.js`,
+            'screen-dpr': '1',
+            'X-B3-TraceId': '1ddec6b8d84d7f25',
+            'X-B3-SpanId': '75986f02bf8a5eb5',
+            'X-B3-ParentSpanId': '1ddec6b8d84d7f25',
+            'X-B3-Flags': '0',
+            DNT: '1',
+            'Alt-Used': 'ca.pinterest.com',
+            Connection: 'keep-alive',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-origin'
+        }
+    };
+
+    const data = await fetch(url, options)
+        .then(response => response.json())
+        .catch(err => console.error(err));
+    return {
+        data: (data as BoardSectionResponse).resource_response.data,
+        bookmark: (data as BoardSectionResponse).resource?.options.bookmarks ?? [""]
+    }
+
 }
 
 async function getBoardSections(board: Board) {
@@ -102,7 +149,7 @@ async function getBoardSections(board: Board) {
 /**
  * Fetch a single page of pins for a board section using bookmark.
  */
-async function fetchBoardSectionPinsPage(
+export async function fetchBoardSectionPinsPage(
     profileName: string,
     board: Board,
     section: SectionData,
