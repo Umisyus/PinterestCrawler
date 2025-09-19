@@ -5,9 +5,9 @@
   "schemaVersion": 1,
   "properties": {
     "profileName": {
-      "title": "profileName",
+      "title": "Profile Name",
       "type": "string",
-      "description": "Profile name",
+      "description": "Pinterest Profile Name",
       "editor": "textfield"
     },
     "limit": {
@@ -19,6 +19,14 @@
       "prefill": 100,
       "minimum": 10,
       "unit": "10"
+    },
+    "urls": {
+      "title": "Pinterest User, Board, or Section URLs",
+      "type": "array",
+      "description": "Add the links to user profile pages, Boards, or Sections",
+      "editor": "stringList",
+      "uniqueItems": true
     }
-  }
+  },
+  "required": []
 }

@@ -2,14 +2,12 @@ import {log} from 'crawlee';
 import {Actor} from 'apify';
 import {getProfileBoards} from "./getProfileBoards"
 import {fetchBoardPins, options} from "./fetchPins";
-import {BoardFeedResource, BoardPinData} from "./types/BoardData.js";
+import {BoardFeedResource} from "./types/BoardData.js";
 import {savetoDS} from "./util";
 import {
-    fetchAllBoardSectionPins,
     fetchBoardSectionPinsPage,
     getBoardSections
 } from "./BoardSection";
-import {PinData} from "./types/PinData";
 
 const DEFAULT_PAGE_SIZE = 50
 await Actor.init()
@@ -18,20 +16,37 @@ const keyValueStore = await Actor.openKeyValueStore('pin-images')
 const dataset = await Actor.openDataset("pin-json-dataset")
 
 const input = await Actor.getInput<any>()
-let profileName: string | undefined = input?.profileName
+let profileName: string | undefined = input.profileName = null
 let limit = input.limit
-let urls = input.urls as string[]
+let urls: string[] = input.urls = []
+let totalCount = 0
+let msg = `At least one URL is required if a profile name is not provided`
 
+
+if (urls.length == 0 && !profileName) {
+    await Actor.exit(msg, {exitCode: 1})
+}
 console.log({input})
 
-for (const url of urls) {
-    await getWithBookmark({url, bookmark: '', limit, options})
-        .then(async r => {
-            await savetoDS(r, dataset);
-        })
+if (urls.length > 0) {
+    for (const url of urls) {
+        await getWithBookmark({url, bookmark: '', limit, options})
+            .then(async r => {
+                await savetoDS(r, dataset);
+                totalCount += r.length
+                log.info(`Fetched snd saved a total ${totalCount} pin items`)
+            })
+    }
 }
+if (profileName)
+    await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
+        .then(async profileData => {
+            await savetoDS(profileData, dataset);
+            totalCount += profileData.length
+            log.info(`Fetched snd saved a total ${totalCount} profile pin items`)
+        })
 
-log.info(`REPORT: Fetched total ${await dataset.getInfo().then(i => i.itemCount)} items`)
+log.info(`REPORT: Fetched total ${await dataset.getInfo().then(i => i!.itemCount)} items`)
 
 /**
  * Fetch one page of user pins using the Pinterest "UserPinsResource" endpoint.
@@ -76,35 +91,6 @@ async function fetchUserPinsPage(
         console.error("Fetch error:", err);
     }
     return null;
-}
-
-/**
- * Fetch all user pins, paginating by bookmark.
- */
-async function fetchAllUserPinsByBookmark(
-    {profileName, options, bookmark, limit}: {
-        profileName: string,
-        options: RequestInit,
-        bookmark?: string | undefined,
-        limit?: number
-    }
-): Promise<PinData[]> {
-    const ALL_PINS: PinData[] = [];
-    let nextBookmark = bookmark ?? "";
-    let prevBookmark = "";
-
-    while (true) {
-        const page = await fetchUserPinsPage({profileName: profileName, bookmark: nextBookmark, options: options});
-        if (!page || !page.data) break;
-        ALL_PINS.push(...page.data);
-
-        prevBookmark = nextBookmark;
-        nextBookmark = page.bookmark?.[0] ?? "";
-        if (!nextBookmark || nextBookmark === prevBookmark) break;
-        if (limit)
-            if (ALL_PINS.length >= limit) break;
-    }
-    return ALL_PINS;
 }
 
 // Write a generic function to query with bookmarks
