@@ -8,6 +8,8 @@ import {
     fetchBoardSectionPinsPage,
     getBoardSections
 } from "./BoardSection";
+import {PinItType} from "./types/PinItType";
+import * as cheerio from "cheerio";
 
 const DEFAULT_PAGE_SIZE = 50
 await Actor.init()
@@ -16,9 +18,9 @@ const keyValueStore = await Actor.openKeyValueStore('pin-images')
 const dataset = await Actor.openDataset("pin-json-dataset")
 
 const input = await Actor.getInput<any>()
-let profileName: string | undefined = input.profileName = null
+let profileName: string | undefined = input.profileName
 let limit = input.limit
-let urls: string[] = input.urls = []
+let urls: string[] = input.urls
 let totalCount = 0
 let msg = `At least one URL is required if a profile name is not provided`
 
@@ -43,7 +45,7 @@ if (profileName)
         .then(async profileData => {
             await savetoDS(profileData, dataset);
             totalCount += profileData.length
-            log.info(`Fetched snd saved a total ${totalCount} profile pin items`)
+            log.info(`Fetched and saved a total ${totalCount} profile pin items`)
         })
 
 log.info(`REPORT: Fetched total ${await dataset.getInfo().then(i => i!.itemCount)} items`)
@@ -93,6 +95,19 @@ async function fetchUserPinsPage(
     return null;
 }
 
+async function fetchPinFromUrl(url: string, options: RequestInit) {
+    let html = await (await fetch(url, {redirect: "follow", ...options})).text();
+
+    // Create a document from the HTML
+    let $ = cheerio.load(html);
+    let scriptTag = $('script[data-relay-response="true"]').first();
+    let text = scriptTag.text()
+    // Extract the JSON data from the script tag
+    if (scriptTag)
+        return (JSON.parse(text) as unknown as PinItType).response.data.v3GetPinQuery.data
+    return null
+}
+
 // Write a generic function to query with bookmarks
 export async function getWithBookmark(
     {bookmark, url, options, limit}: { bookmark: string, url: string, options: RequestInit, limit?: number }) {
@@ -107,7 +122,14 @@ export async function getWithBookmark(
 
         let split = url.split('/').filter(Boolean);
         if (split.at(2) === "pin") {
-            log.warning("Detected pin url, currently these are not supported. skipping...")
+            // log.warning("Detected pin url, currently these are not supported. skipping...")
+            let result = await fetchPinFromUrl(url, options)
+                .then(r => ALL_ITEMS.push(r))
+
+            if (result > 0)
+                log.info(`Fetched pin data for url: ${url}  \n ${JSON.stringify(result)}`)
+            else
+                log.error(`Failed to fetch pin data for url: ${url}`)
             break;
         }
         if (split.length == 3) {

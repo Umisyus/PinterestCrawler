@@ -4,7 +4,9 @@
     "type": "module",
     "description": "This is an example of a Crawlee project.",
     "dependencies": {
+        "@types/cheerio": "^0.22.35",
         "apify": "^3.4.5",
+        "cheerio": "^1.1.2",
         "crawlee": "^3.14.1",
         "node-fetch": "^3.3.0"
     },
