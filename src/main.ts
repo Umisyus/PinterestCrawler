@@ -18,7 +18,7 @@ const keyValueStore = await Actor.openKeyValueStore('pin-images')
 const dataset = await Actor.openDataset("pin-json-dataset")
 
 const input = await Actor.getInput<any>()
-let profileName = input.profileName
+let profileName: string | undefined = input?.profileName
 let limit = input.limit
 let urls = input.urls as string[]
 
@@ -26,95 +26,13 @@ console.log({input})
 
 for (const url of urls) {
     await getWithBookmark({url, bookmark: '', limit, options})
-        .then(r => console.info({r}))
-
+        .then(async r => {
+            await savetoDS(r, dataset);
+        })
 }
 
-async function saveBoardPins() {
-    if (!profileName) throw new Error('No username specified! Please specify a username to crawl.')
+log.info(`REPORT: Fetched total ${await dataset.getInfo().then(i => i.itemCount)} items`)
 
-    const BOOKMARK_END = "-end-";
-
-    log.info(`threshold: ${limit}, profileName: ${profileName}`);
-
-
-    let pins = new Array<BoardPinData>();
-
-    let boards = (await getProfileBoards(profileName)).filter(b => b.privacy !== "secret")
-
-    for (let i = 0; i < boards.length; i++) {
-
-        let nextBookmark = '';
-        let preBookmark = '';
-
-        // Get board pins
-        while (nextBookmark !== BOOKMARK_END) {
-
-            await fetchBoardPins(profileName, boards[i], nextBookmark)
-                .then((boardP) => {
-                    if (boardP === null || boardP === undefined || boardP.pins === null || boardP.pins === undefined) {
-                        log.info("Error: Failed parsing pins for " + boards[i])
-                    }
-
-                    if (boardP !== null) {
-                        pins.push(...boardP.pins)
-                        log.info(`Pin count: ${pins.length}`)
-                        preBookmark = nextBookmark
-                        nextBookmark = boardP.bookmark[0]
-                    }
-                })
-            if (!!nextBookmark && nextBookmark.length > 0 && nextBookmark == preBookmark)
-                break;
-        }
-
-        await savetoDS(pins, dataset)
-        // Clear all pins, bookmarks
-        pins = []
-        nextBookmark = ""
-        preBookmark = ""
-
-        let sections = await getBoardSections(boards[i])
-        let sL = sections.length;
-
-        if (sL > 0) {
-            log.info(`Found ${sL} section(s)`)
-
-            for (const section of sections) {
-                let p = await fetchAllBoardSectionPins(profileName, boards[i], section);
-                log.info(`Saving pins for section: ${section.title}...`)
-
-                if ((p !== null && p !== undefined) && Array.isArray(p) && p.length > 0)
-                    await savetoDS(Array.from(p), dataset)
-            }
-        }
-
-        log.info("Complete " + boards[i].name)
-
-    }
-    log.info(`Total of ${await dataset.getInfo().then(d => d?.itemCount)} items collected.`)
-}
-
-// await saveBoardPins();
-
-
-// const profileName = "dracana96";
-//
-// (async () => {
-//     let pins = new Set()
-//     for (const pin of (await fetchUserPinsPage({profileName, bookmark: "", options, pageSize: 50,limit:50})
-//         .then(async (up) => {
-//             return await fetchAllUserPinsByBookmark({
-//                 options,
-//                 profileName,
-//                 bookmark: up?.bookmark[0] ?? "",
-//             });
-//         }))) {
-//         pins.add(pin)
-//     }
-//     console.info({pins})
-// })()
-
-// AI WROTE THIS
 /**
  * Fetch one page of user pins using the Pinterest "UserPinsResource" endpoint.
  */
@@ -194,6 +112,7 @@ export async function getWithBookmark(
     {bookmark, url, options, limit}: { bookmark: string, url: string, options: RequestInit, limit?: number }) {
     const ALL_ITEMS: any[] = [];
 
+    let profileName_ = profileName ?? url.split('/').filter(Boolean).at(1)!;
     let nextBookmark = bookmark ?? "";
     let prevBookmark = "";
     const BOOKMARK_END = "-end-";
@@ -207,25 +126,30 @@ export async function getWithBookmark(
         }
         if (split.length == 3) {
             // Get User Pins
-            page = await fetchUserPinsPage({profileName, bookmark:nextBookmark, options, pageSize: DEFAULT_PAGE_SIZE + 200})
+            page = await fetchUserPinsPage({
+                profileName: profileName_,
+                bookmark: nextBookmark,
+                options,
+                pageSize: DEFAULT_PAGE_SIZE + 200
+            })
         }
         if (split.length == 4) {
             // Get Board
             const boardName = split.at(3)
-            let boards = await getProfileBoards(profileName)
+            let boards = await getProfileBoards(profileName_)
             const board = boards.find(b => b.name === boardName)
             if (!board) {
-                log.error(`Board not found: ${boardName} for user: ${profileName} at url: ${url}`)
+                log.error(`Board not found: ${boardName} for user: ${profileName_} at url: ${url}`)
                 break;
             }
-            page = await fetchBoardPins(profileName, board, bookmark)
+            page = await fetchBoardPins(profileName_, board, nextBookmark)
             page.data = page.pins
         }
         // Get Board Section
         if (split.length == 5) {
             let boardName = split.at(3)!
             let sectionName = split.at(4)!
-            let boards = await getProfileBoards(profileName);
+            let boards = await getProfileBoards(profileName_);
 
             let board = boards.find((b => b.name.toLocaleLowerCase() === boardName.toLocaleLowerCase()));
 
@@ -233,12 +157,12 @@ export async function getWithBookmark(
                 let sections = await getBoardSections(board);
                 let section = sections.find(s => s.slug === sectionName);
                 if (section) {
-                    page = await fetchBoardSectionPinsPage(profileName, board, section, bookmark)
+                    page = await fetchBoardSectionPinsPage(profileName_, board, section, nextBookmark)
                 } else {
-                    log.error(`Section not found: ${sectionName} for board: ${boardName} for user: ${profileName} at url: ${url}`)
+                    log.error(`Section not found: ${sectionName} for board: ${boardName} for user: ${profileName_} at url: ${url}`)
                 }
             } else {
-                log.error(`Board not found: ${boardName} for user: ${profileName} at url: ${url}`)
+                log.error(`Board not found: ${boardName} for user: ${profileName_} at url: ${url}`)
             }
         }
 
