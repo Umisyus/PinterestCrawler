@@ -31,7 +31,18 @@ if (urls.length == 0 && profileName.trim().length == 0) {
 
 console.log({input})
 
-if ((!profileName && profileName.length === 0) && urls.length > 0) {
+if (profileName && profileName.length > 0) {
+    await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
+        .then(async profileData => {
+            await savetoDS(profileData, dataset);
+            totalCount += profileData.length
+            log.info(`Fetched and saved a total ${totalCount} profile pin items`)
+        })
+}
+log.info('No more profiles to process.')
+
+if (urls.length > 0) {
+    log.info('Processing urls...')
     for (const url of urls) {
         await getWithBookmark({url, bookmark: '', limit, options})
             .then(async r => {
@@ -42,14 +53,6 @@ if ((!profileName && profileName.length === 0) && urls.length > 0) {
     }
 }
 
-if (profileName && profileName.length > 0) {
-    await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
-        .then(async profileData => {
-            await savetoDS(profileData, dataset);
-            totalCount += profileData.length
-            log.info(`Fetched and saved a total ${totalCount} profile pin items`)
-        })
-}
 log.info(`REPORT: Fetched total ${await dataset.getInfo().then(i => i!.itemCount)} items`)
 
 /**
