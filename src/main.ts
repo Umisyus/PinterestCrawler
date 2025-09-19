@@ -6,9 +6,7 @@ import {BoardFeedResource, BoardPinData} from "./types/BoardData.js";
 import {savetoDS} from "./util";
 import {
     fetchAllBoardSectionPins,
-    fetchBoardSectionPins,
     fetchBoardSectionPinsPage,
-    getBoardSectionPins,
     getBoardSections
 } from "./BoardSection";
 import {PinData} from "./types/PinData";
@@ -34,7 +32,6 @@ for (const url of urls) {
 
 async function saveBoardPins() {
     if (!profileName) throw new Error('No username specified! Please specify a username to crawl.')
-
 
     const BOOKMARK_END = "-end-";
 
@@ -147,7 +144,7 @@ async function fetchUserPinsPage(
     try {
         const response = await fetch(url, options);
         if (!response.ok) {
-            console.error(`HTTP error: ${response.status}`);
+            console.error(`HTTP error: ${response.status}, ${response.statusText}`);
             return null;
         }
         const json: BoardFeedResource = await response.json();
@@ -210,7 +207,7 @@ export async function getWithBookmark(
         }
         if (split.length == 3) {
             // Get User Pins
-            page = await fetchUserPinsPage({profileName, bookmark, options, pageSize: DEFAULT_PAGE_SIZE})
+            page = await fetchUserPinsPage({profileName, bookmark:nextBookmark, options, pageSize: DEFAULT_PAGE_SIZE + 200})
         }
         if (split.length == 4) {
             // Get Board
@@ -250,7 +247,9 @@ export async function getWithBookmark(
 
         prevBookmark = nextBookmark;
         nextBookmark = page.bookmark?.[0] ?? "";
-        if (!nextBookmark || nextBookmark === prevBookmark || nextBookmark === BOOKMARK_END) break;
+        if (nextBookmark === prevBookmark) break;
+        if (nextBookmark === BOOKMARK_END) break;
+
         if (limit)
             if (ALL_ITEMS.length >= limit) break;
 
