@@ -41,7 +41,7 @@ if (urls.length > 0) {
     }
 }
 
-if (profileName.length > 0)
+if (profileName!.length > 0)
     await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
         .then(async profileData => {
             await savetoDS(profileData, dataset);
@@ -123,7 +123,7 @@ export async function getWithBookmark(
     while (true) {
 
         let split = url.split('/').filter(Boolean);
-        if (split.at(2).search("pin") || split.at(1).search("pin.it")) {
+        if (split!.at(2)!.search("pin") || split!.at(1)!.search("pin.it")) {
             // log.warning("Detected pin url, currently these are not supported. skipping...")
             let result = await fetchPinFromUrl(url, options)
                 .then(r => ALL_ITEMS.push(r))
