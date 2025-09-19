@@ -3,7 +3,7 @@ import {Actor} from 'apify';
 import {getProfileBoards} from "./getProfileBoards"
 import {fetchBoardPins, options} from "./fetchPins";
 import {BoardFeedResource} from "./types/BoardData.js";
-import {savetoDS} from "./util";
+import {savetoDS} from "./util"
 import {
     fetchBoardSectionPinsPage,
     getBoardSections
