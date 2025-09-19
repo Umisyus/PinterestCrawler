@@ -1,8 +1,9 @@
-# Crawlee + PlaywrightCrawler + TypeScript project
+This is a crawler for Pinterest that will find and store all of the pin data for a profile as JSON into a dataset.
 
-This template is a production ready boilerplate for developing with `PlaywrightCrawler`. Use this to bootstrap your projects using the most up-to-date code.
+# Usage
+To use, `git clone` the project, then type `npm install`,
+then run the project, changing the `profileName` variable to your choosing.
 
-If you're looking for examples or want to learn more visit:
 
 - [Documentation](https://crawlee.dev/api/playwright-crawler/class/PlaywrightCrawler)
 - [Examples](https://crawlee.dev/docs/examples/playwright-crawler)
