@@ -22,24 +22,14 @@ let profileName: string | undefined = input.profileName
 let limit = input.limit
 let urls: string[] = input.urls
 let totalCount = 0
-let msg = `At least one URL is required if a profile name is not provided`
+let msg = `At least one URL is required. Please provide a Pinterest pin, profile, section or board URL.`
 
 
-if (urls.length == 0 && profileName.trim().length == 0) {
+if (urls.length == 0) {
     await Actor.exit(msg, {exitCode: 1})
 }
 
 console.log({input})
-
-if (profileName && profileName.length > 0) {
-    await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
-        .then(async profileData => {
-            await savetoDS(profileData, dataset);
-            totalCount += profileData.length
-            log.info(`Fetched and saved a total ${totalCount} profile pin items`)
-        })
-}
-log.info('No more profiles to process.')
 
 if (urls.length > 0) {
     log.info('Processing urls...')
@@ -119,7 +109,7 @@ export async function getWithBookmark(
     {bookmark, url, options, limit}: { bookmark: string, url: string, options: RequestInit, limit?: number }) {
     const ALL_ITEMS: any[] = [];
 
-    let profileName_ = profileName.length > 0 ? profileName : url.split('/').filter(Boolean).at(2);
+    let profileName_ = url.split('/').filter(Boolean).at(2);
     let nextBookmark = bookmark ?? "";
     let prevBookmark = "";
     const BOOKMARK_END = "-end-";
