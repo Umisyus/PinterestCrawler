@@ -25,7 +25,7 @@ let totalCount = 0
 let msg = `At least one URL is required if a profile name is not provided`
 
 
-if (urls.length == 0 && !profileName) {
+if (urls.length == 0 && (!profileName || profileName.trim().length == 0)) {
     await Actor.exit(msg, {exitCode: 1})
 }
 console.log({input})
@@ -36,11 +36,12 @@ if (urls.length > 0) {
             .then(async r => {
                 await savetoDS(r, dataset);
                 totalCount += r.length
-                log.info(`Fetched snd saved a total ${totalCount} pin items`)
+                log.info(`Fetched and saved a total ${totalCount} pin items`)
             })
     }
 }
-if (profileName)
+
+if (profileName.length > 0)
     await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
         .then(async profileData => {
             await savetoDS(profileData, dataset);
@@ -103,8 +104,9 @@ async function fetchPinFromUrl(url: string, options: RequestInit) {
     let scriptTag = $('script[data-relay-response="true"]').first();
     let text = scriptTag.text()
     // Extract the JSON data from the script tag
-    if (scriptTag)
+    if (scriptTag.length == 1)
         return (JSON.parse(text) as unknown as PinItType).response.data.v3GetPinQuery.data
+
     return null
 }
 
@@ -121,7 +123,7 @@ export async function getWithBookmark(
     while (true) {
 
         let split = url.split('/').filter(Boolean);
-        if (split.at(2) === "pin") {
+        if (split.at(2).search("pin") || split.at(1).search("pin.it")) {
             // log.warning("Detected pin url, currently these are not supported. skipping...")
             let result = await fetchPinFromUrl(url, options)
                 .then(r => ALL_ITEMS.push(r))
