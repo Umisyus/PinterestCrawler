@@ -1,7 +1,6 @@
 // get all boards
 import fetch from "node-fetch";
-import {Board, BoardFeedResource, BoardPinData} from "./types/BoardData.js";
-import * as url from "node:url";
+import {Board, BoardFeedResource} from "./types/BoardData";
 
 export async function getProfileBoards(profileName: string) {
     let url = `https://ca.pinterest.com/resource/BoardsResource/get/?source_url=%2F${profileName}%2F_saved%2F&data=%7B%22options%22%3A%7B%22privacy_filter%22%3A%22all%22%2C%22sort%22%3A%22last_pinned_to%22%2C%22field_set_key%22%3A%22profile_grid_item%22%2C%22filter_stories%22%3Afalse%2C%22username%22%3A%22${profileName}%22%2C%22page_size%22%3A25%2C%22group_by%22%3A%22visibility%22%2C%22include_archived%22%3Atrue%2C%22redux_normalize_feed%22%3Atrue%2C%22filter_all_pins%22%3Afalse%7D%2C%22context%22%3A%7B%7D%7D&_=1757105217784`;

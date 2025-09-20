@@ -1,20 +1,16 @@
-import {log} from 'crawlee';
-import {Actor} from 'apify';
-import {getProfileBoards} from "./getProfileBoards"
-import {fetchBoardPins, options} from "./fetchPins";
-import {BoardFeedResource} from "./types/BoardData.js";
-import {savetoDS} from "./util"
-import {
-    fetchBoardSectionPinsPage,
-    getBoardSections
-} from "./BoardSection";
-import {PinItType} from "./types/PinItType";
+import { log } from 'crawlee';
+import { Actor } from 'apify';
+import { getProfileBoards } from "./getProfileBoards.js"
+import { fetchBoardPins, options } from "./fetchPins.js";
+import { BoardFeedResource } from "./types/BoardData.js";
+import { savetoDS } from "./util.js"
+import { fetchBoardSectionPinsPage, getBoardSections } from "./BoardSection.js";
+import { PinItType } from "./types/PinItType.js";
 import * as cheerio from "cheerio";
 
 const DEFAULT_PAGE_SIZE = 50
 await Actor.init()
 
-const keyValueStore = await Actor.openKeyValueStore('pin-images')
 const dataset = await Actor.openDataset("pin-json-dataset")
 
 const input = await Actor.getInput<any>()
@@ -26,13 +22,13 @@ let msg = `At least one URL is required if a profile name is not provided`
 
 
 if (urls.length == 0 && (!profileName || profileName.trim().length == 0)) {
-    await Actor.exit(msg, {exitCode: 1})
+    await Actor.exit(msg, { exitCode: 1 })
 }
-console.log({input})
+console.log({ input })
 
 if (urls.length > 0) {
     for (const url of urls) {
-        await getWithBookmark({url, bookmark: '', limit, options})
+        await getWithBookmark({ url, bookmark: '', limit, options })
             .then(async r => {
                 await savetoDS(r, dataset);
                 totalCount += r.length
@@ -42,7 +38,7 @@ if (urls.length > 0) {
 }
 
 if (profileName!.length > 0)
-    await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
+    await getWithBookmark({ url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options })
         .then(async profileData => {
             await savetoDS(profileData, dataset);
             totalCount += profileData.length
@@ -55,7 +51,7 @@ log.info(`REPORT: Fetched total ${await dataset.getInfo().then(i => i!.itemCount
  * Fetch one page of user pins using the Pinterest "UserPinsResource" endpoint.
  */
 async function fetchUserPinsPage(
-    {profileName, bookmark, options, pageSize}: {
+    { profileName, bookmark, options, pageSize }: {
         profileName: string,
         bookmark: string,
         options?: RequestInit,
@@ -97,7 +93,7 @@ async function fetchUserPinsPage(
 }
 
 async function fetchPinFromUrl(url: string, options: RequestInit) {
-    let html = await (await fetch(url, {redirect: "follow", ...options})).text();
+    let html = await (await fetch(url, { redirect: "follow", ...options })).text();
 
     // Create a document from the HTML
     let $ = cheerio.load(html);
@@ -111,8 +107,8 @@ async function fetchPinFromUrl(url: string, options: RequestInit) {
 }
 
 // Write a generic function to query with bookmarks
-export async function getWithBookmark(
-    {bookmark, url, options, limit}: { bookmark: string, url: string, options: RequestInit, limit?: number }) {
+async function getWithBookmark(
+    { bookmark, url, options, limit }: { bookmark: string, url: string, options: RequestInit, limit?: number }) {
     const ALL_ITEMS: any[] = [];
 
     let profileName_ = profileName ?? url.split('/').filter(Boolean).at(1)!;
@@ -200,3 +196,4 @@ export async function getWithBookmark(
 
 await Actor.exit()
 
+export { }

@@ -1,6 +1,6 @@
-import {BoardSectionPin, BoardSectionResponse, DatumType, SectionData} from "./types/BoardSectionResponse.js";
-import {Board} from "./types/BoardData.js";
-import {getBoardSlug} from "./getProfileBoards";
+import { BoardSectionPin, BoardSectionResponse, DatumType, SectionData } from "./types/BoardSectionResponse.js";
+import { Board } from "./types/BoardData.js";
+import { getBoardSlug } from "./getProfileBoards.js";
 
 
 async function getBoardSectionPins(profileName: string, boardSlug: string, sectionSlug: string, sectionId: string, bookmark?: string) {
@@ -136,7 +136,7 @@ async function getBoardSections(board: Board) {
         // "mode": "cors"
     }
     let data: SectionData[]
-    let input = encodeURIComponent(JSON.stringify({"options": {"board_id": board.id}, "context": {}}))
+    let input = encodeURIComponent(JSON.stringify({ "options": { "board_id": board.id }, "context": {} }))
     let sections = await fetch("https://ca.pinterest.com/resource/BoardSectionsResource/get/?source_url=%2Fdracana96%2Fconcept-art%2F&data=" + input, options);
     data = (await sections.json() as unknown as BoardSectionResponse).resource_response.data as unknown as SectionData[]
     if (data !== undefined) {
@@ -255,4 +255,4 @@ export async function fetchAllBoardSectionPins(
     return results;
 }
 
-export {getBoardSectionPins, getBoardSections}
+export { getBoardSectionPins, getBoardSections }

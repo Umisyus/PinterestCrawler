@@ -1,7 +1,7 @@
 //  Get pins of User
 import {Datum} from "./types/PinData";
 import fetch from "node-fetch";
-import {Board, BoardFeedResource} from "./types/BoardData.js";
+import {Board, BoardFeedResource} from "./types/BoardData";
 import {log} from "crawlee";
 
 export const options = {
