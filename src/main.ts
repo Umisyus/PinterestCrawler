@@ -14,9 +14,10 @@ await Actor.init()
 const dataset = await Actor.openDataset("pin-json-dataset")
 
 const input = await Actor.getInput<any>()
+log.info(`Input: ${JSON.stringify(input)}`)
 let profileName: string | undefined = input.profileName
 let limit = input.limit
-let urls: string[] = input.urls
+let urls: string[] = input.urls ?? []
 let totalCount = 0
 let msg = `At least one URL is required if a profile name is not provided`
 
@@ -119,13 +120,13 @@ async function getWithBookmark(
     while (true) {
 
         let split = url.split('/').filter(Boolean);
-        if (split!.at(2)!.search("pin") || split!.at(1)!.search("pin.it")) {
-            // log.warning("Detected pin url, currently these are not supported. skipping...")
+        const hasPin = checkLinkHasPin(url);
+        if (hasPin) {
             let result = await fetchPinFromUrl(url, options)
-                .then(r => ALL_ITEMS.push(r))
+                .then(r => ALL_ITEMS.push(r));
 
             if (result > 0)
-                log.info(`Fetched pin data for url: ${url}  \n ${JSON.stringify(result)}`)
+                log.info(`Fetched pin data for url: ${url}  \n ${JSON.stringify(result)}`);
             else
                 log.error(`Failed to fetch pin data for url: ${url}`)
             break;
@@ -197,3 +198,11 @@ async function getWithBookmark(
 await Actor.exit()
 
 export { }
+
+function checkLinkHasPin(url: string) {
+    const split = url.split('/').filter(Boolean);
+    const seg2 = split.at(2);
+    const seg1 = split.at(1);
+    return (seg2 && seg2.startsWith("pin")) ||
+        (seg1 && seg1.startsWith("pin.it"));
+}
