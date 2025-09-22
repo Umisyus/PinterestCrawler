@@ -18,17 +18,17 @@ const keyValueStore = await Actor.openKeyValueStore('pin-images')
 const dataset = await Actor.openDataset("pin-json-dataset")
 
 const input = await Actor.getInput<any>()
+log.info(`Input: ${JSON.stringify(input)}`)
 let profileName: string | undefined = input.profileName
 let limit = input.limit
-let urls: string[] = input.urls
+let urls: string[] = input.urls ?? []
 let totalCount = 0
-let msg = `At least one URL is required. Please provide a Pinterest pin, profile, section or board URL.`
+let msg = `At least one URL is required if a profile name is not provided`
 
 
-if (urls.length == 0) {
+if (urls.length == 0 && (!profileName || profileName.trim().length == 0)) {
     await Actor.exit(msg, {exitCode: 1})
 }
-
 console.log({input})
 
 if (urls.length > 0) {
@@ -42,6 +42,14 @@ if (urls.length > 0) {
             })
     }
 }
+
+if (profileName.length > 0)
+    await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
+        .then(async profileData => {
+            await savetoDS(profileData, dataset);
+            totalCount += profileData.length
+            log.info(`Fetched and saved a total ${totalCount} profile pin items`)
+        })
 
 log.info(`REPORT: Fetched total ${await dataset.getInfo().then(i => i!.itemCount)} items`)
 
@@ -109,7 +117,7 @@ export async function getWithBookmark(
     {bookmark, url, options, limit}: { bookmark: string, url: string, options: RequestInit, limit?: number }) {
     const ALL_ITEMS: any[] = [];
 
-    let profileName_ = url.split('/').filter(Boolean).at(2);
+    let profileName_ = profileName ?? url.split('/').filter(Boolean).at(1)!;
     let nextBookmark = bookmark ?? "";
     let prevBookmark = "";
     const BOOKMARK_END = "-end-";
@@ -117,8 +125,8 @@ export async function getWithBookmark(
     while (true) {
 
         let split = url.split('/').filter(Boolean);
-        if ((split.at(2).search("pin") != -1) || (split.at(1).search("pin.it") != -1)) {
-            // log.warning("Detected pin url, currently these are not supported. skipping...")
+        const hasPin = checkLinkHasPin(url);
+        if (hasPin) {
             let result = await fetchPinFromUrl(url, options)
                 .then(r => ALL_ITEMS.push(r))
 
@@ -194,3 +202,12 @@ export async function getWithBookmark(
 
 await Actor.exit()
 
+export { }
+
+function checkLinkHasPin(url: string) {
+    const split = url.split('/').filter(Boolean);
+    const seg2 = split.at(2);
+    const seg1 = split.at(1);
+    return (seg2 && seg2.startsWith("pin")) ||
+        (seg1 && seg1.startsWith("pin.it"));
+}

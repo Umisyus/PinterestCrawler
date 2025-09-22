@@ -1,44 +1,40 @@
 {
   "extends": "@apify/tsconfig",
   "compilerOptions": {
-    "module": "ES2022",
     "target": "ES2022",
-    "moduleResolution": "node",
-    "outDir": "dist",
-    "importHelpers": true,
-    "skipLibCheck": true,
-    "noUnusedLocals": false,
     "lib": [
+      "ESNext",
       "DOM",
-      "es5",
-      "es6",
-      "dom.iterable",
-      "ESNext"
+      "ES2020",
+      "ES2022"
     ],
-    "baseUrl": "./",
-    "paths": {
-      "tslib": [
-        "node_modules/tslib/tslib.d.ts"
-      ]
-    }
+    "allowJs": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": false,
+    "emitDecoratorMetadata": false,
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist/",
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "coverage",
-    "test",
-    "tests",
-    "examples",
-    "docs",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.d.ts",
-    "src/**/*.test.tsx",
-    "src/**/*.spec.tsx",
-    "src/**/*.d.tsx"
-  ],
   "include": [
-    "src/**/*.ts"
-  ]
+    "./src/**/*.ts",
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist"
+  ],
+  "baseUrl": "."
 }
