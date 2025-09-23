@@ -1,15 +1,14 @@
 import {log} from 'crawlee';
 import {Actor} from 'apify';
-import {getProfileBoards} from "./getProfileBoards"
+import {getBoardSlug, getProfileBoards} from "./getProfileBoards"
 import {fetchBoardPins, options} from "./fetchPins";
-import {BoardFeedResource} from "./types/BoardData.js";
+import {BoardFeedResource, BoardPinData} from "./types/BoardData.js";
 import {savetoDS} from "./util";
-import {
-    fetchBoardSectionPinsPage,
-    getBoardSections
-} from "./BoardSection";
-import {PinItType} from "./types/PinItType";
+import {fetchBoardSectionPinsPage, getBoardSections} from "./BoardSection";
+import {PinItType, V3GetPinQueryData} from "./types/PinItType";
 import * as cheerio from "cheerio";
+import {PinData} from "./types/PinData";
+import {BoardSectionPin} from "./types/BoardSectionResponse";
 
 const DEFAULT_PAGE_SIZE = 50
 await Actor.init()
@@ -26,7 +25,7 @@ let totalCount = 0
 let msg = `At least one URL is required if a profile name is not provided`
 
 
-if (urls.length == 0 && (!profileName || profileName.trim().length == 0)) {
+if (urls.length == 0 && (!profileName || profileName.length == 0)) {
     await Actor.exit(msg, {exitCode: 1})
 }
 console.log({input})
@@ -36,20 +35,26 @@ if (urls.length > 0) {
     for (const url of urls) {
         await getWithBookmark({url, bookmark: '', limit, options})
             .then(async r => {
-                await savetoDS(r, dataset);
-                totalCount += r.length
-                log.info(`Fetched and saved a total ${totalCount} pin items`)
+                if (r !== undefined && r.length > 0) {
+                    await savetoDS(r, dataset);
+                    totalCount += r.length
+                    log.info(`Fetched and saved a total ${totalCount} pin items`)
+                } else log.warning(`No pin items were found for url: ${url}`)
+
             })
     }
 }
-
-if (profileName.length > 0)
-    await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
-        .then(async profileData => {
-            await savetoDS(profileData, dataset);
-            totalCount += profileData.length
-            log.info(`Fetched and saved a total ${totalCount} profile pin items`)
-        })
+if (profileName) {
+    if (profileName.length > 0) {
+        await getWithBookmark({url: `http://pintrest.com/${profileName}/`, bookmark: '', limit, options})
+            .then(async profileData => {
+                if (profileData)
+                    //     await savetoDS(profileData, dataset);
+                    totalCount += profileData.length
+                log.info(`Fetched and saved a total ${totalCount} profile pin items`)
+            })
+    }
+}
 
 log.info(`REPORT: Fetched total ${await dataset.getInfo().then(i => i!.itemCount)} items`)
 
@@ -112,29 +117,73 @@ async function fetchPinFromUrl(url: string, options: RequestInit) {
     return null
 }
 
+function normalizePins(ALL_ITEMS: any[]) {
+    return ALL_ITEMS.map((o: any | V3GetPinQueryData | BoardPinData | PinItType | PinData | BoardSectionPin) => {
+        let url!: string;
+        let video: string | undefined = undefined;
+
+        if (o.images !== undefined)
+            if (o.images.url !== undefined)
+                url = o.images.url
+        if ("images" in o && o.images instanceof Object && Object.keys(o.images).length > 0) {
+            // @ts-ignore
+            url = o.images[Object.keys(o['images']).at(-1)].url
+        }
+        if ("imageSpec_orig" in o)
+            url = o.imageSpec_orig?.url
+
+        if (!url) {
+            throw new Error('Pin url not found! Was it a valid pin? ' + JSON.stringify(o));
+        }
+
+        if (o.videos) {
+            if (o.videos.videoUrls && o.videos.videoUrls instanceof Array)
+                if (o.videos.videoUrls.length > 0)
+                    video = o.videos.videoUrls.sort().at(0)
+        }
+
+        return {
+            name: o.grid_title ?? o.entity_id ?? o.id,
+            id: o.id ?? o.entity_id,
+            url,
+            board: "board" in o ? getBoardSlug(o.board.url) : null,
+            section: "section" in o ? o?.section?.title : null,
+            video: video ?? null
+        };
+    });
+}
+
 // Write a generic function to query with bookmarks
 export async function getWithBookmark(
     {bookmark, url, options, limit}: { bookmark: string, url: string, options: RequestInit, limit?: number }) {
     const ALL_ITEMS: any[] = [];
 
-    let profileName_ = profileName ?? url.split('/').filter(Boolean).at(1)!;
+    let profileName_ = profileName ?? url.split('/').filter(Boolean).at(2)!;
     let nextBookmark = bookmark ?? "";
     let prevBookmark = "";
     const BOOKMARK_END = "-end-";
     let page: any;
-    while (true) {
 
+    while (true) {
+        /*
+        Depending on URL structure, try to guess the type of request
+        [user profile, board, section or individual pin]
+        */
+
+        // Get pin from HTML
         let split = url.split('/').filter(Boolean);
         const hasPin = checkLinkHasPin(url);
         if (hasPin) {
             let result = await fetchPinFromUrl(url, options)
                 .then(r => ALL_ITEMS.push(r))
 
-            if (result > 0)
+            if (result > 0) {
                 log.info(`Fetched pin data for url: ${url}  \n ${JSON.stringify(result)}`)
-            else
+                break;
+            } else {
                 log.error(`Failed to fetch pin data for url: ${url}`)
-            break;
+                break;
+            }
         }
         if (split.length == 3) {
             // Get User Pins
@@ -189,20 +238,19 @@ export async function getWithBookmark(
         if (limit)
             if (ALL_ITEMS.length >= limit) break;
 
-        if (page == null || undefined) {
+        if (!page) {
             log.info(`No data for url: ${url}`)
             break;
         }
     }
 
 
-    return ALL_ITEMS;
-
+    return normalizePins(ALL_ITEMS.filter(o => o.type !== "story"))
 }
 
 await Actor.exit()
 
-export { }
+export {}
 
 function checkLinkHasPin(url: string) {
     const split = url.split('/').filter(Boolean);

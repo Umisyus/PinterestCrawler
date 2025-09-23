@@ -1,3 +1,5 @@
+import {SectionData} from "./BoardSectionResponse";
+
 export interface PinItType {
     requestParameters: RequestParameters;
     variables: Variables;
@@ -48,7 +50,7 @@ export interface V3GetPinQueryData {
     commentsDisabled: boolean;
     createdAt: string;
     domain: string;
-    images: Image;
+    images: Image[]|{url:string};
     isDownstreamPromotion: boolean;
     isEligibleForAggregatedComments: boolean;
     isGoLinkless: boolean;
@@ -65,7 +67,7 @@ export interface V3GetPinQueryData {
     pinner: Pinner;
     promotedIsRemovable: boolean;
     recommendationReason: null;
-    section: null;
+    section: SectionData;
     shouldOpenInStream: boolean;
     storyPinData: null;
     thirdPartyPinOwner: null;
